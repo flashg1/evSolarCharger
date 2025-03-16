@@ -41,8 +41,9 @@ My setup
 
 -	Home Assistant, https://www.home-assistant.io/
 -	Enphase Envoy Integration configured for 30 seconds update interval, https://www.home-assistant.io/integrations/enphase_envoy
--	Tesla Custom Integration v3.20.4 (this is only required if you need to use Tesla API to control a Tesla car for charging), https://github.com/alandtse/tesla
-- OCPP v0.70 (this is only required if you need to use OCPP to control an OCPP compliant charger to charge an EV), https://github.com/lbbrhzn/ocpp
+-	Tesla Custom Integration v3.20.4 (this is for people who want to control their Tesla via Tesla cloud), https://github.com/alandtse/tesla
+- Tesla BLE MQTT docker v0.5.0 (this is for people who want to control their Tesla locally via Bluetooth without cloud), https://github.com/tesla-local-control/tesla_ble_mqtt_docker
+- OCPP v0.84 (this is for people who want to use OCPP to control an OCPP compliant charger to charge their EV), https://github.com/lbbrhzn/ocpp
 -	Tesla UMC charger, 230V, max 15A.
 -	Tesla Model 3.
 

@@ -65,7 +65,7 @@ blueprint:
       default: 15
       selector:
         number:
-          min: 5
+          min: 1
           max: 100
           unit_of_measurement: amp
           mode: box
@@ -73,7 +73,7 @@ blueprint:
     charger_min_current:
       name: Charger minimum current
       description: >
-        Specify the minimum car charging current when there is not enough solar electricity (Settings > Devices & Services > Helpers > Create helper > Number).
+        Specify the minimum car charging current when there is not enough solar electricity (Settings > Devices & Services > Helpers > Create helper > Number or Template).
           * The default is 0A if not defined.
       default: number.user_custom
       selector:
@@ -243,7 +243,9 @@ blueprint:
 
     car_charge_limit_monday:
       name: Monday
-      description: "Car charge limit for day (valid range: 50 - 100)."
+      description: >
+        Car charge limit for day (valid range: 50 - 100).
+          * Default:  70
       default: 70
       selector:
         number:
@@ -254,7 +256,9 @@ blueprint:
 
     car_charge_limit_tuesday:
       name: Tuesday
-      description: "Car charge limit for day (valid range: 50 - 100)."
+      description: >
+        Car charge limit for day (valid range: 50 - 100).
+          * Default:  70
       default: 70
       selector:
         number:
@@ -265,7 +269,9 @@ blueprint:
 
     car_charge_limit_wednesday:
       name: Wednesday
-      description: "Car charge limit for day (valid range: 50 - 100)."
+      description: >
+        Car charge limit for day (valid range: 50 - 100).
+          * Default:  70
       default: 70
       selector:
         number:
@@ -276,7 +282,9 @@ blueprint:
 
     car_charge_limit_thursday:
       name: Thursday
-      description: "Car charge limit for day (valid range: 50 - 100)."
+      description: >
+        Car charge limit for day (valid range: 50 - 100).
+          * Default:  70
       default: 70
       selector:
         number:
@@ -287,7 +295,9 @@ blueprint:
 
     car_charge_limit_friday:
       name: Friday
-      description: "Car charge limit for day (valid range: 50 - 100)."
+      description: >
+        Car charge limit for day (valid range: 50 - 100).
+          * Default:  80
       default: 80
       selector:
         number:
@@ -298,7 +308,9 @@ blueprint:
 
     car_charge_limit_saturday:
       name: Saturday
-      description: "Car charge limit for day (valid range: 50 - 100)."
+      description: >
+        Car charge limit for day (valid range: 50 - 100).
+          * Default:  80
       default: 80
       selector:
         number:
@@ -309,7 +321,9 @@ blueprint:
 
     car_charge_limit_sunday:
       name: Sunday
-      description: "Car charge limit for day (valid range: 50 - 100)."
+      description: >
+        Car charge limit for day (valid range: 50 - 100).
+          * Default:  80
       default: 80
       selector:
         number:
@@ -326,6 +340,7 @@ blueprint:
       description: >
         Automatically adjust to the highest charge limit set within a rainy forecast period.
         Daily car charge limit and weather provider settings must be configured.
+          * Default:  off
       default: false
       selector:
         boolean:
@@ -342,7 +357,9 @@ blueprint:
 
     forecast_index:
       name: Forecast days
-      description: Number of days to forecast weather excluding today.
+      description: >
+        Number of days to forecast weather excluding today.
+          * Default:  1
       default: 1
       selector:
         number:
@@ -366,6 +383,7 @@ blueprint:
       description: >
         Car charge limit to set on bad weather forecast (valid range: 50 - 100).
         This will be used unless there is a higher setting within the forecast period.
+          * Default:  80
       default: 80
       selector:
         number:
