@@ -1317,7 +1317,14 @@ actions:
             # Minimum charge current
             chargerMinCurrent: >
               {% if has_value(e_carChargerMinCurrent) %}
-                {{ states(e_carChargerMinCurrent) | int }}
+                {% set minCurrent = states(e_carChargerMinCurrent) | int %}
+                {% if minCurrent < 0 %}
+                  {{ 0 }}
+                {% elif minCurrent > carChargerMaxCurrent %}
+                  {{ carChargerMaxCurrent }}
+                {% else %}
+                  {{ minCurrent }}
+                {% endif %}
               {% else %}
                 {{ 0 }}
               {% endif %}
