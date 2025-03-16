@@ -1355,10 +1355,10 @@ actions:
                 {{ 0 }}
               {% endif %}
 
-            # Feedback loop power sensor
+            # Feedback loop power sensor (default 0 set by float(0) if cannot convert to float).
             feedbackLoopPower: "{{ states(e_mainPowerNet) | float(0) }}"
 
-            # Net power from all sources (default 0 set by float(0) if cannot convert to float).
+            # Net power from all sources.
             allPowerNet: "{{ feedbackLoopPower + (oneAmpWattStep * powerDrawSkew) + powerOffset }}"
 
             # This can be greater than carChargerMaxCurrent.
