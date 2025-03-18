@@ -708,8 +708,9 @@ trigger_variables:
   # SuspendedEVSE (EV plugged in but EVSE does not allow charging)
   # Finishing (EV plugged in but charging session ending)
   rc_ocpp_charger_connect_trigger: "{{ ['preparing'] }}"
-  rc_ocpp_charger_done: "{{ ['suspendedev', 'suspendedevse', 'finishing'] }}"
-  rc_ocpp_charger_connected: "{{ rc_ocpp_charger_connect_trigger + ['charging'] + rc_ocpp_charger_done }}"
+  rc_ocpp_charger_suspended: "{{ ['suspendedev', 'suspendedevse'] }}"
+  rc_ocpp_charger_connected: "{{ rc_ocpp_charger_connect_trigger + ['charging'] + rc_ocpp_charger_suspended }}"
+  rc_ocpp_charger_done: "{{ rc_ocpp_charger_suspended + ['finishing'] }}"
 
   # OCPP state 'available' is used for trigger testing with IAMMeter.
   #rc_charger_connect_trigger: "{{ rc_tcustom_charger_connected + rc_ble_charger_connected + rc_ocpp_charger_connect_trigger + ['available'] }}"
