@@ -1,6 +1,9 @@
 EV Solar Charger
 ================
 
+v3.0beta27  18/3/2025
+-   Implemented charger status transitions according to OCPP spec v1.6j page 38. Thanks @BJReplay.
+
 v3.0beta26  16/3/2025
 -   For Tesla BLE, if car got disconnected and driven away before the next update, all sensors stayed the same except binary_sensor.tesla_ble_vin_presence.
 -   Minimum current sanity check.

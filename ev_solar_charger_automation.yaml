@@ -16,7 +16,7 @@ blueprint:
 
   name: EV solar charger automation
   description: >
-    Use OCPP and/or EV specific API to charge EV from excess solar and weather forecast (v3.0beta26).
+    Use OCPP and/or EV specific API to charge EV from excess solar and weather forecast (v3.0beta27).
     See https://github.com/flashg1/evSolarCharger for details.
 
 
@@ -687,6 +687,7 @@ trigger_variables:
   # Tesla Custom API entities
   # binary_sensor.charger: on, off
   # binary_sensor.charging: on, off
+  rc_tcustom_charger_connected: "{{ ['on'] }}"
 
   # Tesla Fleet API entities
   # binary_sensor.charge_cable: on, off
@@ -696,24 +697,32 @@ trigger_variables:
   # sensor.tesla_ble_vin_charge_cable: No, SAE, IEC
   # sensor.tesla_ble_vin_charging_state: Disconnected, Complete (reached charge limit but charger is not turned off), Charging, Stopped (charger turned off)
   # binary_sensor.tesla_ble_vin_presence: on=home, off=away (sensor not 100% accurate)
+  rc_ble_charger_connected: "{{ ['sae', 'iec'] }}"
+  rc_ble_charger_done: "{{ ['complete'] }}"
 
-  # See OCPP spec v1.6j ChargePointStatus on page 77, ie. sensor.charger_status_connector
+  # See OCPP spec v1.6j page 38 transition states, and page 77 ChargePointStatus (sensor.charger_status_connector).
   # Available (no EV connected)
-  # Preparing (EV plugged in but not yet charging)
-  # Charging (active charging session)
-  # Finishing (charging session ending)
+  # Preparing (EV plugged in but charging yet to start)
+  # Charging (EV plugged in with active charging session)
+  # SuspendedEV (EV plugged in but not accepting charge)
+  # SuspendedEVSE (EV plugged in but EVSE does not allow charging)
+  # Finishing (EV plugged in but charging session ending)
+  rc_ocpp_charger_connect_trigger: "{{ ['preparing'] }}"
+  rc_ocpp_charger_done: "{{ ['suspendedev', 'suspendedevse', 'finishing'] }}"
+  rc_ocpp_charger_connected: "{{ rc_ocpp_charger_connect_trigger + ['charging'] + rc_ocpp_charger_done }}"
 
-  # For OCPP trigger testing using IAMMeter.
-  # rc_charger_connected: "{{ ['on', 'preparing', 'sae', 'iec', 'available'] }}"
-  rc_charger_connected: "{{ ['on', 'preparing', 'sae', 'iec'] }}"
+  # OCPP state 'available' is used for trigger testing with IAMMeter.
+  #rc_charger_connect_trigger: "{{ rc_tcustom_charger_connected + rc_ble_charger_connected + rc_ocpp_charger_connect_trigger + ['available'] }}"
+  rc_charger_connect_trigger: "{{ rc_tcustom_charger_connected + rc_ble_charger_connected + rc_ocpp_charger_connect_trigger }}"
+
+  # OCPP uses single sensor to indicate plugged in and charging
+  # OCPP state 'available' is used for IAMMeter testing only.
+  #rc_charger_connected: "{{ rc_tcustom_charger_connected + rc_ble_charger_connected + rc_ocpp_charger_connected + ['available'] }}"
+  rc_charger_connected: "{{ rc_tcustom_charger_connected + rc_ble_charger_connected + rc_ocpp_charger_connected }}"
   rc_charger_charging: "{{ ['on', 'charging'] }}"
 
-  # Note: OCPP use single sensor to indicate plugged in and charging
-  # Should remove 'available' in production code, left here for IAMMeter testing only.
-  rc_charger_connected_or_charging: "{{ rc_charger_connected + rc_charger_charging + ['available'] }}"
-
   # For BLE, charger is still turned on after reaching charge limit, ie. charging status=complete
-  rc_charger_charging_or_completed: "{{ rc_charger_charging + ['complete'] }}"
+  rc_charger_charging_or_done: "{{ rc_charger_charging + rc_ble_charger_done + rc_ocpp_charger_done }}"
 
   rc_ev_at_home: "{{ ['home', 'on'] }}"
 
@@ -721,7 +730,7 @@ triggers:
 
   # Trigger action if just plugged in.
   - trigger: template
-    value_template: "{{ states(e_carChargerPluggedIn) | lower in rc_charger_connected }}"
+    value_template: "{{ states(e_carChargerPluggedIn) | lower in rc_charger_connect_trigger }}"
 
   # Trigger action at elevation after sunrise.
   - trigger: numeric_state
@@ -1201,9 +1210,9 @@ actions:
             #     - "Preparing"
             #     - "Charging"
 
-            - alias: "Continue if charger is plugged in or charging"
+            - alias: "Continue if charger is plugged in"
               condition: template
-              value_template: "{{ states(e_carChargerPluggedIn) | lower in rc_charger_connected_or_charging }}"
+              value_template: "{{ states(e_carChargerPluggedIn) | lower in rc_charger_connected }}"
 
             # For Tesla BLE, if car got disconnected and driven away before the next update, all sensors stayed the same except binary_sensor.tesla_ble_vin_presence.
             # binary_sensor.tesla_ble_vin_presence detected car was away after few minutes, and script tried to turn off charger before exiting, but still all sensors stayed the same.
@@ -1301,7 +1310,6 @@ actions:
 
             # Sometimes the charging status is not updated after turning on charger causing script to exit in while loop. Best to get status now.
             # Tesla BLE MQTT took 110 sec for force_update_all, but only 13 sec for force_update_charge.
-            #
             - if:
                 - condition: template
                   value_template: "{{ has_value(e_evCarForceUpdateHa) }}"
@@ -1493,7 +1501,7 @@ actions:
   # Set 0 charging current and turn off charger if it is on or charging
   - if:
       - condition: template
-        value_template: "{{ states(e_isCarCharging) | lower in rc_charger_charging_or_completed }}"
+        value_template: "{{ states(e_isCarCharging) | lower in rc_charger_charging_or_done }}"
     then:
       - if:
           - condition: template
