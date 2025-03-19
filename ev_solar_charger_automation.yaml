@@ -684,10 +684,13 @@ trigger_variables:
   #####################################
   # API return codes
   #####################################
+  rc_common_charging_state: "{{ ['charging'] }}"
+
   # Tesla Custom API entities
   # binary_sensor.charger: on, off
   # binary_sensor.charging: on, off
   rc_tcustom_charger_connected: "{{ ['on'] }}"
+  rc_tcustom_charging_state: "{{ ['on'] }}"
 
   # Tesla Fleet API entities
   # binary_sensor.charge_cable: on, off
@@ -697,6 +700,7 @@ trigger_variables:
   # sensor.tesla_ble_vin_charge_cable: No, SAE, IEC
   # sensor.tesla_ble_vin_charging_state: Disconnected, Complete (reached charge limit but charger is not turned off), Charging, Stopped (charger turned off)
   # binary_sensor.tesla_ble_vin_presence: on=home, off=away (sensor not 100% accurate)
+  # For BLE, charger is still turned on after reaching charge limit, ie. charging status=complete
   rc_ble_charger_connected: "{{ ['sae', 'iec'] }}"
   rc_ble_charger_done: "{{ ['complete'] }}"
 
@@ -704,26 +708,24 @@ trigger_variables:
   # Available (no EV connected)
   # Preparing (EV plugged in but charging yet to start)
   # Charging (EV plugged in with active charging session)
-  # SuspendedEV (EV plugged in but not accepting charge)
-  # SuspendedEVSE (EV plugged in but EVSE does not allow charging)
-  # Finishing (EV plugged in but charging session ending)
+  # SuspendedEV (EV plugged in but not accepting charge, eg. EV getting ready, charge limit reached)
+  # SuspendedEVSE (EV plugged in but EVSE does not allow charging, eg. current drops below 6A)
+  # Finishing (EV plugged in but charging session ending, ie. charger switched off)
+  # OCPP state 'available' can be used for trigger testing with IAMMeter.
   rc_ocpp_charger_connect_trigger: "{{ ['preparing'] }}"
-  rc_ocpp_charger_suspended: "{{ ['suspendedev', 'suspendedevse'] }}"
-  rc_ocpp_charger_connected: "{{ rc_ocpp_charger_connect_trigger + ['charging'] + rc_ocpp_charger_suspended }}"
-  rc_ocpp_charger_done: "{{ rc_ocpp_charger_suspended + ['finishing'] }}"
+  rc_ocpp_charging_suspended: "{{ ['suspendedev', 'suspendedevse'] }}"
+  rc_ocpp_charging_state: "{{ rc_common_charging_state + rc_ocpp_charging_suspended }}"
+  rc_ocpp_charger_done: "{{ ['finishing'] }}"
+  rc_ocpp_charger_connected: "{{ rc_ocpp_charger_connect_trigger + rc_ocpp_charging_state }}"
 
-  # OCPP state 'available' is used for trigger testing with IAMMeter.
-  #rc_charger_connect_trigger: "{{ rc_tcustom_charger_connected + rc_ble_charger_connected + rc_ocpp_charger_connect_trigger + ['available'] }}"
+  #####################################
+  # Final combined return codes
+  #####################################
   rc_charger_connect_trigger: "{{ rc_tcustom_charger_connected + rc_ble_charger_connected + rc_ocpp_charger_connect_trigger }}"
 
   # OCPP uses single sensor to indicate plugged in and charging
-  # OCPP state 'available' is used for IAMMeter testing only.
-  #rc_charger_connected: "{{ rc_tcustom_charger_connected + rc_ble_charger_connected + rc_ocpp_charger_connected + ['available'] }}"
   rc_charger_connected: "{{ rc_tcustom_charger_connected + rc_ble_charger_connected + rc_ocpp_charger_connected }}"
-  rc_charger_charging: "{{ ['on', 'charging'] }}"
-
-  # For BLE, charger is still turned on after reaching charge limit, ie. charging status=complete
-  rc_charger_charging_or_done: "{{ rc_charger_charging + rc_ble_charger_done + rc_ocpp_charger_done }}"
+  rc_charger_charging_state: "{{ rc_tcustom_charging_state + rc_ocpp_charging_state }}"
 
   rc_ev_at_home: "{{ ['home', 'on'] }}"
 
@@ -1035,7 +1037,6 @@ actions:
         response_variable: ocpp_max_stack_level
 
   - variables:
-
       ocppStackLevel: >
         {% if useOcppApi %}
           {{ ocpp_max_stack_level['value'] | int }}
@@ -1178,8 +1179,11 @@ actions:
   #####################################
   # Main while loop
   #####################################
-  - repeat:
+  - variables:
+      debug_ChargerPluggedIn: "e_carChargerPluggedIn={{ states(e_carChargerPluggedIn) }}, rc_charger_connected={{ rc_charger_connected }}"
+      debug_ChargingState: "e_isCarCharging={{ states(e_isCarCharging) }}, rc_charger_charging_state={{ rc_charger_charging_state }}"
 
+  - repeat:
       #####################################
       # Only start charging when following conditions are met, otherwise exit script.
       #####################################
@@ -1255,7 +1259,6 @@ actions:
                     or (is_state_attr('sun.sun', 'rising', false) and state_attr('sun.sun', 'elevation') > sunsetElevationEndTrigger) }}
 
       sequence:
-
         #####################################
         # Switch on charger before calculating power usage. Accuracy depends on rate of main_power_net update.
         #####################################
@@ -1267,7 +1270,7 @@ actions:
             - alias: "Then turn on charger if not already on"
               if:
                 - condition: template
-                  value_template: "{{ not states(e_isCarCharging) | lower in rc_charger_charging }}"
+                  value_template: "{{ is_state(e_carChargerSwitch, 'off') }}"
               then:
                 # Turn on charger for the first time. Rate of current increase is handled by Tesla car.
                 - action: switch.turn_on
@@ -1414,7 +1417,7 @@ actions:
           - conditions:
               - alias: "Exit script if car is not charging"
                 condition: template
-                value_template: "{{ not states(e_isCarCharging) | lower in rc_charger_charging }}"
+                value_template: "{{ not states(e_isCarCharging) | lower in rc_charger_charging_state }}"
             sequence:
               - alias: "Turn off charger just in case if charging status issue"
                 action: switch.turn_off
@@ -1496,13 +1499,17 @@ actions:
                 entity_id: "{{ e_evCarForceUpdateHa }}"
             - delay: "{{ wait_force_update }}"
 
+        - variables:
+            debug_ChargerPluggedIn: "e_carChargerPluggedIn={{ states(e_carChargerPluggedIn) }}, rc_charger_connected={{ rc_charger_connected }}"
+            debug_ChargingState: "e_isCarCharging={{ states(e_isCarCharging) }}, rc_charger_charging_state={{ rc_charger_charging_state }}"
+
   #####################################
   # Exit script
   #####################################
   # Set 0 charging current and turn off charger if it is on or charging
   - if:
       - condition: template
-        value_template: "{{ states(e_isCarCharging) | lower in rc_charger_charging_or_done }}"
+        value_template: "{{ is_state(e_carChargerSwitch, 'on') }}"
     then:
       - if:
           - condition: template
