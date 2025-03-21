@@ -527,8 +527,8 @@ blueprint:
         Entity to control current in Ampere used to charge the car battery.
         Entity is automatically defined for the selected API unless it is marked as ***Not defined***.
           * OCPP:         sensor.[ChargerName]_current_import (read-only)
-          * Tesla Custom: number.[CarName_]charging_amps (read/write)
-          * Tesla Fleet:  number.[CarName_]charge_current (read/write)
+          * Tesla Custom: number.[CarName_]charging_amps
+          * Tesla Fleet:  number.[CarName_]charge_current
           * Tesla BLE:    number.tesla_ble_[vin]_charging_current
           * User custom:  ***Not defined***
       default: number.user_custom
