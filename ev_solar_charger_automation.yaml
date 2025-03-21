@@ -1135,6 +1135,7 @@ actions:
 
         # Set car charge limit if using EV specific API.
         # Changing charge limit can turn on or off Tesla charger by car depending on whether charge limit has been reached or not.
+        # Note: Cannot use number.set_value to set an input_number.
         - if:
             - condition: template
               value_template: "{{ has_value(e_evCarChargeLimit) }}"
