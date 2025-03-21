@@ -716,7 +716,7 @@ trigger_variables:
   rc_ocpp_charging_suspended: "{{ ['suspendedev', 'suspendedevse'] }}"
   rc_ocpp_charging_state: "{{ rc_common_charging_state + rc_ocpp_charging_suspended }}"
   rc_ocpp_charger_done: "{{ ['finishing'] }}"
-  rc_ocpp_charger_connected: "{{ rc_ocpp_charger_connect_trigger + rc_ocpp_charging_state }}"
+  rc_ocpp_charger_connected: "{{ rc_ocpp_charger_connect_trigger + rc_ocpp_charging_state + rc_ocpp_charger_done }}"
 
   #####################################
   # Final combined return codes
@@ -1076,6 +1076,11 @@ actions:
               response_variable: weather_forecast
 
         - variables:
+            debug_chargeLimitConfig: |
+              todayIndex={{todayIndex}}
+              carChargeLimitList={{carChargeLimitList}}
+              carChargeLimitOnBadWeather={{carChargeLimitOnBadWeather}}
+
             # Period forecast list excluding today
             periodForecastList: >
               {% set data = namespace(strings=[]) %}
@@ -1118,15 +1123,15 @@ actions:
               {% endif %}
 
         # Show current status
-        - action: system_log.write
-          data_template:
-            message: |-
-              {{now()}}: 
-              finalCarChargeLimit={{finalCarChargeLimit}}, todayCarChargeLimit={{todayCarChargeLimit}}, carChargeLimitOnBadWeather={{carChargeLimitOnBadWeather}},
-              badWeatherPeriodMaxChargeLimit={{badWeatherPeriodMaxChargeLimit}}, badWeatherPeriodChargeLimitList={{badWeatherPeriodChargeLimitList}}, periodForecastList={{periodForecastList}},
-              todayIndex={{todayIndex}}, carChargeLimitList={{carChargeLimitList}}, weatherToday={{weatherToday}}
-            #level: warning
-            level: info
+        # - action: system_log.write
+        #   data_template:
+        #     message: |-
+        #       {{now()}}: 
+        #       finalCarChargeLimit={{finalCarChargeLimit}}, todayCarChargeLimit={{todayCarChargeLimit}}, carChargeLimitOnBadWeather={{carChargeLimitOnBadWeather}},
+        #       badWeatherPeriodMaxChargeLimit={{badWeatherPeriodMaxChargeLimit}}, badWeatherPeriodChargeLimitList={{badWeatherPeriodChargeLimitList}}, periodForecastList={{periodForecastList}},
+        #       todayIndex={{todayIndex}}, carChargeLimitList={{carChargeLimitList}}, weatherToday={{weatherToday}}
+        #     #level: warning
+        #     level: info
 
         # Set car charge limit if using EV specific API.
         # Changing charge limit can turn on or off Tesla charger by car depending on whether charge limit has been reached or not.
@@ -1180,8 +1185,12 @@ actions:
   # Main while loop
   #####################################
   - variables:
-      debug_ChargerPluggedIn: "e_carChargerPluggedIn={{ states(e_carChargerPluggedIn) }}, rc_charger_connected={{ rc_charger_connected }}"
-      debug_ChargingState: "e_isCarCharging={{ states(e_isCarCharging) }}, rc_charger_charging_state={{ rc_charger_charging_state }}"
+      debug_ChargerPluggedIn: |
+        e_carChargerPluggedIn={{ states(e_carChargerPluggedIn) }}
+        rc_charger_connected={{ rc_charger_connected }}
+      debug_ChargingState: |
+        e_isCarCharging={{ states(e_isCarCharging) }}
+        rc_charger_charging_state={{ rc_charger_charging_state }}
 
   - repeat:
       #####################################
@@ -1419,7 +1428,7 @@ actions:
                 condition: template
                 value_template: "{{ not states(e_isCarCharging) | lower in rc_charger_charging_state }}"
             sequence:
-              - alias: "Turn off charger just in case if charging status issue"
+              - alias: "Always turn off charger just in case if charging status issue, eg. not up-to-date"
                 action: switch.turn_off
                 data: {}
                 target:
@@ -1435,7 +1444,7 @@ actions:
                     target:
                       entity_id: "{{ e_evCarForceUpdateHa }}"
                   - delay: "{{ wait_force_update }}"
-              - stop: >
+              - stop: |
                   Exiting script due to charger turned off manually or automatically by car when charge limit reached.
                   If this is unexpected, try increasing wait time for "Wait charging status update".
                 # https://www.home-assistant.io/docs/scripts/#stopping-a-script-sequence
@@ -1500,8 +1509,12 @@ actions:
             - delay: "{{ wait_force_update }}"
 
         - variables:
-            debug_ChargerPluggedIn: "e_carChargerPluggedIn={{ states(e_carChargerPluggedIn) }}, rc_charger_connected={{ rc_charger_connected }}"
-            debug_ChargingState: "e_isCarCharging={{ states(e_isCarCharging) }}, rc_charger_charging_state={{ rc_charger_charging_state }}"
+            debug_ChargerPluggedIn: |
+              e_carChargerPluggedIn={{ states(e_carChargerPluggedIn) }}
+              rc_charger_connected={{ rc_charger_connected }}
+            debug_ChargingState: |
+              e_isCarCharging={{ states(e_isCarCharging) }}
+              rc_charger_charging_state={{ rc_charger_charging_state }}
 
   #####################################
   # Exit script
