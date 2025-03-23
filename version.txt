@@ -1,6 +1,9 @@
 EV Solar Charger
 ================
 
+v3.0beta28  23/3/2025
+-   Breaking change: Need to define connected, charging and home states if "User custom API" is selected.
+
 v3.0beta27  18/3/2025
 -   Implemented charger status transitions according to OCPP spec v1.6j page 38. Thanks @BJReplay.
 -   Proper handling for OCPP charging states SuspendedEV and SuspendedEVSE.  Thanks @BJReplay.
