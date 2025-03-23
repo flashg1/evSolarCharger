@@ -545,10 +545,10 @@ blueprint:
         Define list of charger connect states that can trigger this automation.
         List must be in square brackets, and states in single quotes and comma separated.
         Config is automatically defined for the selected API unless it is marked as ***Not defined***.
-          * Tesla Custom: ['on']
-          * Tesla Fleet:  ['on']
-          * Tesla BLE:    ['sae', 'iec']
-          * OCPP:         ['preparing']
+          * Tesla Custom: ['On']
+          * Tesla Fleet:  ['On']
+          * Tesla BLE:    ['SAE', 'IEC']
+          * OCPP:         ['Preparing']
           * User custom:  ***Not defined***
       default: "[]"
       selector:
@@ -560,10 +560,10 @@ blueprint:
         Define list of charger connected states.
         List must be in square brackets, and states in single quotes and comma separated.
         Config is automatically defined for the selected API unless it is marked as ***Not defined***.
-          * Tesla Custom: ['on']
-          * Tesla Fleet:  ['on']
-          * Tesla BLE:    ['sae', 'iec']
-          * OCPP:         ['preparing', 'charging', 'suspendedev', 'suspendedevse', 'finishing']
+          * Tesla Custom: ['On']
+          * Tesla Fleet:  ['On']
+          * Tesla BLE:    ['SAE', 'IEC']
+          * OCPP:         ['Preparing', 'Charging', 'SuspendedEV', 'SuspendedEVSE', 'Finishing']
           * User custom:  ***Not defined***
       default: "[]"
       selector:
@@ -575,10 +575,10 @@ blueprint:
         Define list of charger charging states.
         List must be in square brackets, and states in single quotes and comma separated.
         Config is automatically defined for the selected API unless it is marked as ***Not defined***.
-          * Tesla Custom: ['on']
-          * Tesla Fleet:  ['charging']
-          * Tesla BLE:    ['charging']
-          * OCPP:         ['charging', 'suspendedev', 'suspendedevse']
+          * Tesla Custom: ['On']
+          * Tesla Fleet:  ['Charging']
+          * Tesla BLE:    ['Charging']
+          * OCPP:         ['Charging', 'SuspendedEV', 'SuspendedEVSE']
           * User custom:  ***Not defined***
       default: "[]"
       selector:
@@ -646,9 +646,9 @@ blueprint:
         Define list of car-at-home states. Requires "EV location tracker" entity.
         List must be in square brackets, and states in single quotes and comma separated.
         Config is automatically defined for the selected API unless it is marked as ***Not defined***.
-          * Tesla Custom: ['home']
-          * Tesla Fleet:  ['home']
-          * Tesla BLE:    ***Not defined*** (['on'])
+          * Tesla Custom: ['Home']
+          * Tesla Fleet:  ['Home']
+          * Tesla BLE:    ***Not defined*** (['On'])
           * OCPP:         ***Not defined***
           * User custom:  ***Not defined***
       default: "[]"
@@ -751,28 +751,28 @@ trigger_variables:
   # Tesla Custom API entities
   # binary_sensor.charger: on, off
   # binary_sensor.charging: on, off
-  rc_tcustom_connect_trigger: "{{ ['on'] }}"
+  rc_tcustom_connect_trigger: "{{ ['On'] | lower }}"
   rc_tcustom_charger_connected: "{{ rc_tcustom_connect_trigger }}"
-  rc_tcustom_charging_state: "{{ ['on'] }}"
-  rc_tcustom_car_at_home: "{{ ['home'] }}"
+  rc_tcustom_charging_state: "{{ ['On'] | lower }}"
+  rc_tcustom_car_at_home: "{{ ['Home'] | lower }}"
 
   # Tesla Fleet API entities
   # binary_sensor.charge_cable: on, off
   # sensor.charging: starting, charging, stopped, complete, disconnected, no_power
-  rc_tfleet_connect_trigger: "{{ ['on'] }}"
+  rc_tfleet_connect_trigger: "{{ ['On'] | lower }}"
   rc_tfleet_charger_connected: "{{ rc_tfleet_connect_trigger }}"
-  rc_tfleet_charging_state: "{{ ['charging'] }}"
-  rc_tfleet_car_at_home: "{{ ['home'] }}"
+  rc_tfleet_charging_state: "{{ ['Charging'] | lower }}"
+  rc_tfleet_car_at_home: "{{ ['Home'] | lower }}"
 
   # BLE entities
   # sensor.tesla_ble_vin_charge_cable: No, SAE, IEC
   # sensor.tesla_ble_vin_charging_state: Disconnected, Complete (reached charge limit but charger is not turned off), Charging, Stopped (charger turned off)
   # binary_sensor.tesla_ble_vin_presence: on=home, off=away (sensor not 100% accurate)
   # For BLE, charger is still turned on after reaching charge limit, ie. charging status=complete
-  rc_ble_connect_trigger: "{{ ['sae', 'iec'] }}"
+  rc_ble_connect_trigger: "{{ ['SAE', 'IEC'] | lower }}"
   rc_ble_charger_connected: "{{ rc_ble_connect_trigger }}"
-  rc_ble_charging_state: "{{ ['charging'] }}"
-  rc_ble_car_at_home: "{{ ['on'] }}"
+  rc_ble_charging_state: "{{ ['Charging'] | lower }}"
+  rc_ble_car_at_home: "{{ ['On'] | lower }}"
 
   # See OCPP spec v1.6j page 38 transition states, and page 77 ChargePointStatus (sensor.charger_status_connector).
   # Available (no EV connected)
@@ -783,9 +783,9 @@ trigger_variables:
   # Finishing (EV plugged in but charging session ending, ie. charger switched off)
   # OCPP uses single sensor to indicate plugged in and charging
   # OCPP state 'available' can be used for trigger testing with IAMMeter.
-  rc_ocpp_connect_trigger: "{{ ['preparing'] }}"
-  rc_ocpp_charging_state: "{{ ['charging', 'suspendedev', 'suspendedevse'] }}"
-  rc_ocpp_charger_done: "{{ ['finishing'] }}"
+  rc_ocpp_connect_trigger: "{{ ['Preparing'] | lower }}"
+  rc_ocpp_charging_state: "{{ ['Charging', 'SuspendedEV', 'SuspendedEVSE'] | lower }}"
+  rc_ocpp_charger_done: "{{ ['Finishing'] | lower }}"
   rc_ocpp_charger_connected: "{{ rc_ocpp_connect_trigger + rc_ocpp_charging_state + rc_ocpp_charger_done }}"
 
   #####################################
