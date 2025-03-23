@@ -138,13 +138,13 @@ blueprint:
           unit_of_measurement: second
           mode: box
 
-    wait_charging_status_update:
-      name: Wait charging status update
+    wait_general_update:
+      name: Wait general update
       description: >
-        Specify in seconds to wait for charging status update in HA after switching on charger.
+        Specify in seconds to wait for general status update in HA, eg. after changing charge limit.
         Tested ok with minimum 16 seconds for Tesla BLE MQTT API, but suggest to try 20 seconds.
-          * Default:  0
-      default: 0
+          * Default:  20
+      default: 20
       selector:
         number:
           min: 0
@@ -1298,8 +1298,11 @@ actions:
                 entity_id: "{{ e_evCarForceUpdateHa }}"
             - delay: "{{ wait_force_update }}"
 
+        # BLE: Need minimum wait_general_update=16, wait_force_update=5. Charging status took 27 sec to register after sending switch on charger command.
+        # BLE: Tested ok with minimum 16 seconds for Tesla BLE MQTT API, but suggest to try 20 seconds.
+        # Others: wait_general_update=0, wait_force_update=5
         - alias: "Wait charge limit update" 
-          delay: !input wait_charging_status_update
+          delay: !input wait_general_update
 
     # Don't set daily car charge limit, so just copy charge limit from API if available. Otherwise publish_car_charge_limit must be set by user.
     default:
@@ -1397,87 +1400,6 @@ actions:
 
       sequence:
         #####################################
-        # Switch on charger before calculating power usage. Accuracy depends on rate of main_power_net update.
-        #####################################
-        - if:
-            - alias: "If looping for the first time in while loop"
-              condition: template
-              value_template: "{{ repeat.index == 1 }}"
-          then:
-            - alias: "Then turn on charger if not already on"
-              if:
-                - condition: template
-                  value_template: "{{ is_state(e_carChargerSwitch, 'off') }}"
-              then:
-                # Turn on charger for the first time. Rate of current increase is handled by Tesla car.
-                - action: switch.turn_on
-                  data: {}
-                  target:
-                    entity_id: "{{ e_carChargerSwitch }}"
-                - delay: "{{ wait_charger_on }}"
-
-            # Always set initial charge current here after turning on charger.
-            # Tesla API will only set new charge current if the old and new values are different. Confirmed in log.
-            # If using OCPP API. See https://github.com/lbbrhzn/ocpp/blob/main/docs/Charge_automation.md
-            - alias: "And set initial charge current"
-              if:
-                - condition: template
-                  value_template: "{{ useOcppChargerApi }}"
-              then:
-                - action: ocpp.set_charge_rate     
-                  data:
-                    custom_profile: |
-                      {
-                        "transactionId": {{ states(e_ocppChargerTransactionId) | int }},
-                        "chargingProfileId": 1,
-                        "stackLevel": {{ ocppStackLevel }},
-                        "chargingProfilePurpose": "TxProfile",
-                        "chargingProfileKind": "Relative",
-                        "chargingSchedule": {
-                          "chargingRateUnit": "A",
-                          "chargingSchedulePeriod": [
-                            {"startPeriod": 0, "limit": {{ initial_charge_current }}}  
-                          ]
-                        }
-                      }
-                    conn_id: 1
-              else:
-                - action: number.set_value
-                  data:
-                    value: "{{ initial_charge_current }}"
-                  target:
-                    entity_id: "{{ e_carChargingAmps }}"
-            - delay: "{{ wait_current_change }}"
-
-            # Sometimes the charging status is not updated after turning on charger causing script to exit in while loop. Best to get status now.
-            # Tesla BLE MQTT took 110 sec for force_update_all, but only 13 sec for force_update_charge.
-            - if:
-                - condition: template
-                  value_template: "{{ has_value(e_evCarForceUpdateHa) }}"
-              then:
-                - action: button.press
-                  data: {}
-                  target:
-                    entity_id: "{{ e_evCarForceUpdateHa }}"
-                - delay: "{{ wait_force_update }}"
-
-            # Tesla Fleet API does not have force update button, so should be ok to poll once here for everything.
-            - if:
-                - condition: template
-                  value_template: "{{ useTeslaFleetApi }}"
-              then:
-                - action: homeassistant.update_entity
-                  data:
-                    entity_id:
-                      - "{{ e_isCarCharging }}"
-                - delay: "{{ wait_fleet_api_update }}"
-
-            # BLE: Need minimum wait_charging_status_update=16, wait_force_update=5. Charging status took 27 sec to register after sending switch on charger command.
-            # Others: wait_charging_status_update=0, wait_force_update=5
-            - alias: "Wait charging status update" 
-              delay: !input wait_charging_status_update
-
-        #####################################
         # Calculate new charging current
         #####################################
         - variables:
@@ -1546,11 +1468,74 @@ actions:
             #    {{ false }}
             #  {% endif %}
 
-        #####################################
-        # Change charging current if required
-        #####################################
         - choose:
+          #####################################
+          # Turn on charger if looping for the first time
+          #####################################
+          - conditions:
+              - alias: "Turn on charger if looping for the first time"
+                condition: template
+                value_template: "{{ repeat.index == 1 }}"
+            sequence:
+              - alias: "Turn on charger if not already on"
+                if:
+                  - condition: template
+                    value_template: "{{ is_state(e_carChargerSwitch, 'off') }}"
+                then:
+                  # Turn on charger for the first time. Rate of current increase is handled by Tesla car.
+                  - action: switch.turn_on
+                    data: {}
+                    target:
+                      entity_id: "{{ e_carChargerSwitch }}"
+                  - delay: "{{ wait_charger_on }}"
 
+              # Always set initial charge current here after turning on charger.
+              # Tesla API will only set new charge current if the old and new values are different. Confirmed in log.
+              # If using OCPP API. See https://github.com/lbbrhzn/ocpp/blob/main/docs/Charge_automation.md
+              - alias: "Set initial charge current"
+                if:
+                  - condition: template
+                    value_template: "{{ useOcppChargerApi }}"
+                then:
+                  - action: ocpp.set_charge_rate     
+                    data:
+                      custom_profile: |
+                        {
+                          "transactionId": {{ states(e_ocppChargerTransactionId) | int }},
+                          "chargingProfileId": 1,
+                          "stackLevel": {{ ocppStackLevel }},
+                          "chargingProfilePurpose": "TxProfile",
+                          "chargingProfileKind": "Relative",
+                          "chargingSchedule": {
+                            "chargingRateUnit": "A",
+                            "chargingSchedulePeriod": [
+                              {"startPeriod": 0, "limit": {{ initial_charge_current }}}  
+                            ]
+                          }
+                        }
+                      conn_id: 1
+                else:
+                  - action: number.set_value
+                    data:
+                      value: "{{ initial_charge_current }}"
+                    target:
+                      entity_id: "{{ e_carChargingAmps }}"
+              - delay: "{{ wait_current_change }}"
+
+              # Tesla Fleet API does not have force update button, so should be ok to poll once here for everything.
+              - if:
+                  - condition: template
+                    value_template: "{{ useTeslaFleetApi }}"
+                then:
+                  - action: homeassistant.update_entity
+                    data:
+                      entity_id:
+                        - "{{ e_isCarCharging }}"
+                  - delay: "{{ wait_fleet_api_update }}"
+
+          #####################################
+          # Exit script if car is not charging
+          #####################################
           - conditions:
               - alias: "Exit script if car is not charging"
                 condition: template
@@ -1579,6 +1564,9 @@ actions:
                 # Cannot get response_variable to work. Needs to be key/value pair?
                 #response_variable: "stop_charging_reason"
 
+          #####################################
+          # Change charging current if required
+          #####################################
           - conditions:
               - alias: "Set charge current if new current is different from old"
                 condition: template
@@ -1613,18 +1601,15 @@ actions:
                       entity_id: "{{ e_carChargingAmps }}"
               - delay: "{{ wait_current_change }}"
 
+          #####################################
+          # Default do nothing
+          #####################################
           default:
             - alias: "Do nothing since new current is same as old"
               delay: "00:00:00"
 
-        # Sleep enough to allow solar inverter updates. Should be ok to sleep longer to avoid changing charge current too often.
-        # Other things can happen during sleep time, eg. car unplugged.
-        - delay:
-            hours: 0
-            minutes: 0
-            seconds: !input wait_main_power_net_update
-            milliseconds: 0
-
+        # Sometimes the charging status is not updated after turning on charger causing script to exit in while loop. Best to get status now.
+        # Tesla BLE MQTT took 110 sec for force_update_all, but only 13 sec for force_update_charge.
         # Get latest conditions from Tesla to update HA as last step before checking these conditions at beginning of repeat loop.
         - if:
             - condition: template
@@ -1635,6 +1620,14 @@ actions:
               target:
                 entity_id: "{{ e_evCarForceUpdateHa }}"
             - delay: "{{ wait_force_update }}"
+
+        # Sleep enough to allow solar inverter updates. Should be ok to sleep longer to avoid changing charge current too often.
+        # Other things can happen during sleep time, eg. car unplugged.
+        - delay:
+            hours: 0
+            minutes: 0
+            seconds: !input wait_main_power_net_update
+            milliseconds: 0
 
         - variables:
             debug_ChargerState: |
