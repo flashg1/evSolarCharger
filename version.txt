@@ -1,6 +1,9 @@
 EV Solar Charger
 ================
 
+v3.0beta29  24/3/2025
+-   Tidied up wait_api_update_ha delay time code.
+
 v3.0beta28  23/3/2025
 -   Breaking change: Added option to define trigger, connected, charging and home states if using "User custom API".
 -   Rearranged main loop for simplicity and stability, eg. get status update before sleep for Tesla BLE.

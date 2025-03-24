@@ -16,7 +16,7 @@ blueprint:
 
   name: EV solar charger automation
   description: >
-    Use OCPP and/or EV specific API to charge EV from excess solar and weather forecast (v3.0beta28).
+    Use OCPP and/or EV specific API to charge EV from excess solar and weather forecast (v3.0beta29).
     See https://github.com/flashg1/evSolarCharger for details.
 
 
@@ -899,7 +899,7 @@ variables:
   #####################################
   # Wait in seconds after issuing update status command to update HA. 
   # Extra delay required for BLE MQTT to register change in charging state. Need minimum 8 seconds for Tesla BLE.
-  wait_force_update: !input wait_status_update
+  wait_api_update_ha: !input wait_status_update
 
   carChargerVoltage: !input charger_voltage
   carChargerMaxCurrent: !input charger_max_current
@@ -1144,7 +1144,8 @@ actions:
         data: {}
         target:
           entity_id: "{{ e_evForceUpdateHa }}"
-      - delay: "{{ wait_force_update }}"
+      # No need to move status wait out of if statement because this is API specific.
+      - delay: "{{ wait_api_update_ha }}"
 
   # Sanity check in case of manual run.
   # Do not manually run this script if car is not at home, because it affects car charging anywhere.
@@ -1296,12 +1297,14 @@ actions:
               data: {}
               target:
                 entity_id: "{{ e_evForceUpdateHa }}"
-            - delay: "{{ wait_force_update }}"
+            # Move out later: Moved status wait out of if statement to apply wait for all after charge limit change.
+            - delay: "{{ wait_api_update_ha }}"
 
-        # BLE: Need minimum wait_general_update=16, wait_force_update=5. Charging status took 27 sec to register after sending switch on charger command.
+        # BLE: Need minimum wait_general_update=16, wait_api_update_ha=5. Charging status took 27 sec to register after sending switch on charger command.
         # BLE: Tested ok with minimum 16 seconds for Tesla BLE MQTT API, but suggest to try 20 seconds.
-        # Others: wait_general_update=0, wait_force_update=5
-        - alias: "Wait charge limit update" 
+        # Others: wait_general_update=0, wait_api_update_ha=5
+        # wait_general_update to be removed since can adjust wait_api_update_ha. Suggest to set wait_api_update_ha=25 for Tesla BLE MQTT API.
+        - alias: "Wait charge limit update"
           delay: !input wait_general_update
 
     # Don't set daily car charge limit, so just copy charge limit from API if available. Otherwise publish_car_charge_limit must be set by user.
@@ -1563,10 +1566,11 @@ actions:
                     data: {}
                     target:
                       entity_id: "{{ e_evForceUpdateHa }}"
-                  - delay: "{{ wait_force_update }}"
+              # Moved status wait out of if statement to apply wait for all just before exit.
+              - delay: "{{ wait_api_update_ha }}"
               - stop: |
                   Exiting script due to charger turned off manually or automatically by car when charge limit reached.
-                  If this is unexpected, try increasing wait time for "Wait charging status update".
+                  If this is unexpected, try increasing wait time for "Wait status update".
                 # https://www.home-assistant.io/docs/scripts/#stopping-a-script-sequence
                 # Cannot get response_variable to work. Needs to be key/value pair?
                 #response_variable: "stop_charging_reason"
@@ -1626,7 +1630,8 @@ actions:
               data: {}
               target:
                 entity_id: "{{ e_evForceUpdateHa }}"
-            - delay: "{{ wait_force_update }}"
+            # No need to move status wait out of if statement, because next will wait with wait_main_power_net_update.
+            # - delay: "{{ wait_api_update_ha }}"
 
         # Sleep enough to allow solar inverter updates. Should be ok to sleep longer to avoid changing charge current too often.
         # Other things can happen during sleep time, eg. car unplugged.
@@ -1705,7 +1710,8 @@ actions:
         data: {}
         target:
           entity_id: "{{ e_evForceUpdateHa }}"
-      - delay: "{{ wait_force_update }}"
+  # Moved status wait out of if statement to apply wait for all just before exit.
+  - delay: "{{ wait_api_update_ha }}"
 
 ###############################################################################
 # Only one Blueprint can run at any one time
