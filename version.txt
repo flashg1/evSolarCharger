@@ -3,6 +3,7 @@ EV Solar Charger
 
 v3.0beta29  24/3/2025
 -   Tidied up wait_api_update_ha delay time code.
+-   Set 0A OCPP current if available current is less than 6A.
 
 v3.0beta28  23/3/2025
 -   Breaking change: Added option to define trigger, connected, charging and home states if using "User custom API".

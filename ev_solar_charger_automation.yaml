@@ -402,8 +402,8 @@ blueprint:
         Select
         [Tesla Custom API](https://github.com/alandtse/tesla),
         or [Tesla Fleet API](https://www.home-assistant.io/integrations/tesla_fleet) (not tested),
-        or [Tesla BLE MQTT API](https://github.com/tesla-local-control/tesla_ble_mqtt_docker),
-        or [OCPP Charger API](https://github.com/lbbrhzn/ocpp) to control an OCPP compliant charger to charge a EV (tested with [OCPP simulator](https://github.com/lewei50/iammeter-simulator) only),
+        or [Tesla BLE (Bluetooth Low Energy) MQTT API](https://github.com/tesla-local-control/tesla_ble_mqtt_docker),
+        or [OCPP (Open Charge Point Protocol) Charger API](https://github.com/lbbrhzn/ocpp) to control an OCPP compliant charger to charge a EV (tested with [OCPP simulator](https://github.com/lewei50/iammeter-simulator) only),
         or select user custom API to specify your own configs.
         Configs that are marked as ***Not defined*** for the selected API can be manually entered if required.
 
@@ -445,7 +445,7 @@ blueprint:
     # BLE configs
     #####################################
     ble_vin_id:
-      name: Tesla BLE (Bluetooth Low Energy) VIN ID
+      name: Tesla BLE VIN ID
       description: >
         Enter the Tesla BLE VIN ID for use with ***Tesla BLE MQTT API***.
         BLE VIN ID combines with base entity name to form a unique entity identifier.
@@ -458,7 +458,7 @@ blueprint:
     # OCPP configs
     #####################################
     ocpp_charger_name:
-      name: OCPP (Open Charge Point Protocol) charger name
+      name: OCPP charger name
       description: >
         Enter the OCPP charger name as defined on your OCPP server for use with ***OCPP charger API***.
         OCPP charger name combines with base entity name to form a unique entity identifier.
@@ -466,6 +466,20 @@ blueprint:
       default: "charger"
       selector:
         text:
+
+    ocpp_charger_min_workable_current:
+      name: OCPP charger minimum workable current
+      description: >
+        Specify OCPP charger minimum workable current in Ampere.
+        If available current falls below the OCPP charger minimum workable current, the charge current will be set to 0A.
+          * Default:  6
+      default: 6
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: amp
+          mode: box
 
     #####################################
     # Basic common control entities
@@ -930,8 +944,8 @@ variables:
   
   sunriseElevationStartTrigger: !input sunrise_elevation_start_trigger
   sunsetElevationEndTrigger: !input sunset_elevation_end_trigger
-
   chargeCarBaseOnWeather: !input charge_car_base_on_weather
+  ocppMinWorkableCurrent: !input ocpp_charger_min_workable_current
 
   # Power = Voltage * Current
   # The power step in watts to increase or decrease with 1A current change.
@@ -1466,8 +1480,14 @@ actions:
                 {{ [carChargerMaxCurrent, carChargeCurrent - allCurrentNet] | min | round(0) }}
               {% endif %}
             
-            # Ensure new charge current is greater than or equal to charger minimum current.
-            newChargeCurrent: "{{ [chargerMinCurrent, proposeChargeCurrent] | max }}"
+            # Ensure new charge current is greater than or equal to charger minimum current. Set 0A OCPP current if available current is less than 6A.
+            newChargeCurrent: >
+              {% set newCurrent = [chargerMinCurrent, proposeChargeCurrent] | max %}
+              {% if useOcppChargerApi and newCurrent < ocppMinWorkableCurrent %}
+                {{ 0 }}
+              {% else %}
+                {{ newCurrent }}
+              {% endif %}
 
             # Not used
             #isDaytime: >
