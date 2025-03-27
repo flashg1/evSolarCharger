@@ -691,62 +691,11 @@ blueprint:
           domain: button
 
 ###############################################################################
-# Triggers and conditions
-# Note:
-# - Tesla triggers do not update often due to infrequent polling.
-#   See https://github.com/alandtse/tesla/wiki/Polling-policy
+# Trigger variables
 ###############################################################################
 # Trigger variables must be defined here because triggers and conditions do not have access to global variables at time of trigger.
 # Trigger variables are global variables.
 trigger_variables:
-  k_tesla_custom_api: "k_tesla_custom_api"
-  k_tesla_fleet_api: "k_tesla_fleet_api"
-  k_tesla_blemqtt_api: "k_tesla_blemqtt_api"
-  k_ocpp_charger_api: "k_ocpp_charger_api"
-  k_user_custom_api: "k_user_custom_api"
-
-  chargeControlApiSelected: !input select_charge_control_api
-  useTeslaCustomApi: "{{ chargeControlApiSelected == k_tesla_custom_api }}"
-  useTeslaFleetApi: "{{ chargeControlApiSelected == k_tesla_fleet_api }}"
-  useBleMqttApi: "{{ chargeControlApiSelected == k_tesla_blemqtt_api }}"
-  useOcppChargerApi: "{{ chargeControlApiSelected == k_ocpp_charger_api }}"
-  useUserCustomApi: "{{ chargeControlApiSelected == k_user_custom_api }}"
-
-  i_teslaCarName: !input tesla_car_name
-  teslaCarName: >
-    {% if i_teslaCarName == "" %}
-      {{ i_teslaCarName }}
-    {% else %}
-      {{ i_teslaCarName | lower }}_
-    {% endif %}
-  i_bleVinId: !input ble_vin_id
-  bleVinId: "{{ i_bleVinId | lower }}"
-  i_ocppChargerName: !input ocpp_charger_name
-  ocppChargerName: "{{ i_ocppChargerName | lower }}"
-
-  i_evHomeState: !input car_location_tracker
-  e_evHomeState: >
-    {% if useTeslaCustomApi %}
-      device_tracker.{{ teslaCarName }}location_tracker
-    {% elif useTeslaFleetApi %}
-      device_tracker.{{ teslaCarName }}location
-    {% else %}
-      {{ i_evHomeState }}
-    {% endif %}
-
-  i_chargerConnectState: !input car_sensor_charger_pluggedin
-  e_chargerConnectState: >
-    {% if useTeslaCustomApi %}
-      binary_sensor.{{ teslaCarName }}charger
-    {% elif useTeslaFleetApi %}
-      binary_sensor.{{ teslaCarName }}charge_cable
-    {% elif useBleMqttApi %}
-      sensor.tesla_ble_{{ bleVinId }}_charge_cable
-    {% elif useOcppChargerApi %}
-      sensor.{{ ocppChargerName }}_status_connector
-    {% else %}
-      {{ i_chargerConnectState }}
-    {% endif %}
 
   #####################################
   # API return codes
@@ -785,57 +734,162 @@ trigger_variables:
   # SuspendedEVSE (EV plugged in but EVSE does not allow charging, eg. current drops below 6A)
   # Finishing (EV plugged in but charging session ending, ie. charger switched off)
   # OCPP uses single sensor to indicate plugged in and charging
-  # OCPP state 'available' can be used for trigger testing with IAMMeter.
+  # Use 'Available' state for trigger testing with IAMMeter. Just need to turn on then off OCPP "Charge Control" to trigger the automation.
+  # rc_ocpp_connect_trigger: "{{ ['Available', 'Preparing'] | lower }}"
   rc_ocpp_connect_trigger: "{{ ['Preparing'] | lower }}"
   rc_ocpp_charging_state: "{{ ['Charging', 'SuspendedEV', 'SuspendedEVSE'] | lower }}"
   rc_ocpp_charger_done: "{{ ['Finishing'] | lower }}"
   rc_ocpp_charger_connected: "{{ rc_ocpp_connect_trigger + rc_ocpp_charging_state + rc_ocpp_charger_done }}"
 
   #####################################
-  # Set selected API return codes
+  # Charge control API
   #####################################
+  # https://community.home-assistant.io/t/how-to-use-if-then-statements-to-create-dictionary-variables-in-scripts/688152
+  # https://community.home-assistant.io/t/return-a-variable-which-is-a-dictionary-in-script-to-automation/796744/5
+  # No duplicate variable names in the same variable section, otherwise automation cannot start. Check log for duplicate variable error.
+
+  k_tesla_custom_api: "k_tesla_custom_api"
+  k_tesla_fleet_api: "k_tesla_fleet_api"
+  k_tesla_blemqtt_api: "k_tesla_blemqtt_api"
+  k_ocpp_charger_api: "k_ocpp_charger_api"
+  k_user_custom_api: "k_user_custom_api"
+
+  k_charger_connect_state: "k_charger_connect_state"
+  k_charger_connect_trigger_list: "k_charger_connect_trigger_list"
+  k_charger_connected_state_list: "k_charger_connected_state_list"
+  k_charger_onoff_switch: "k_charger_onoff_switch"
+  k_charger_charge_state: "k_charger_charge_state"
+  k_charger_charging_state_list: "k_charger_charging_state_list"
+  k_charger_current: "k_charger_current"
+  k_ev_battery_level: "k_ev_battery_level"
+  k_ev_charge_limit: "k_ev_charge_limit"
+  k_ev_home_state: "k_ev_home_state"
+  k_ev_at_home_state_list: "k_ev_at_home_state_list"
+  k_ev_wake_up: "k_ev_wake_up"
+  k_ev_status_update: "k_ev_status_update"
+
+  i_chargerConnectState: !input car_sensor_charger_pluggedin
   i_chargerConnectTriggerList: !input charger_connect_trigger_list
-  rc_chargerConnectTriggerList: >
-    {% if useTeslaCustomApi %}
-      {{ rc_tcustom_connect_trigger }}
-    {% elif useTeslaFleetApi %}
-      {{ rc_tfleet_connect_trigger }}
-    {% elif useBleMqttApi %}
-      {{ rc_ble_connect_trigger }}
-    {% elif useOcppChargerApi %}
-      {{ rc_ocpp_connect_trigger }}
-    {% else %}
-      {{ i_chargerConnectTriggerList | lower }}
-    {% endif %}
-
   i_chargerConnectedStateList: !input charger_connected_state_list
-  rc_chargerConnectedStateList: >
-    {% if useTeslaCustomApi %}
-      {{ rc_tcustom_charger_connected }}
-    {% elif useTeslaFleetApi %}
-      {{ rc_tfleet_charger_connected }}
-    {% elif useBleMqttApi %}
-      {{ rc_ble_charger_connected }}
-    {% elif useOcppChargerApi %}
-      {{ rc_ocpp_charger_connected }}
-    {% else %}
-      {{ i_chargerConnectedStateList | lower }}
-    {% endif %}
-
+  i_chargerSwitch: !input car_switch_charger
+  i_chargerChargeState: !input car_sensor_charging
+  i_chargerChargingStateList: !input charger_charging_state_list
+  i_chargerAmp: !input car_number_charging_amps
+  i_evBatteryLevel: !input car_sensor_battery
+  i_evChargeLimit: !input car_number_charge_limit
+  i_evHomeState: !input car_location_tracker
   i_evAtHomeStateList: !input car_at_home_state_list
-  rc_evAtHomeStateList: >
-    {% if useTeslaCustomApi %}
-      {{ rc_tcustom_car_at_home }}
-    {% elif useTeslaFleetApi %}
-      {{ rc_tfleet_car_at_home }}
-    {% else %}
-      {{ i_evAtHomeStateList | lower }}
-    {% endif %}
+  i_evWakeUp: !input car_button_wake_up
+  i_evForceUpdateHa: !input car_button_forceupdate_ha
 
+  i_teslaCarName: !input tesla_car_name
+  teslaCarName: >
+    {% if i_teslaCarName == "" %}
+      {{ i_teslaCarName }}
+    {% else %}
+      {{ i_teslaCarName | lower }}_
+    {% endif %}
+  teslaCustomApi:
+    k_charger_connect_state: "binary_sensor.{{ teslaCarName }}charger"
+    k_charger_connect_trigger_list: "{{ rc_tcustom_connect_trigger }}"
+    k_charger_connected_state_list: "{{ rc_tcustom_charger_connected }}"
+    k_charger_onoff_switch: "switch.{{ teslaCarName }}charger"
+    k_charger_charge_state: "binary_sensor.{{ teslaCarName }}charging"
+    k_charger_charging_state_list: "{{ rc_tcustom_charging_state }}"
+    k_charger_current: "number.{{ teslaCarName }}charging_amps"
+    k_ev_battery_level: "sensor.{{ teslaCarName }}battery"
+    k_ev_charge_limit: "number.{{ teslaCarName }}charge_limit"
+    k_ev_home_state: "device_tracker.{{ teslaCarName }}location_tracker"
+    k_ev_at_home_state_list: "{{ rc_tcustom_car_at_home }}"
+    k_ev_wake_up: "button.{{ teslaCarName }}wake_up"
+    k_ev_status_update: "button.{{ teslaCarName }}force_data_update"
+
+  teslaFleetApi:
+    k_charger_connect_state: "binary_sensor.{{ teslaCarName }}charge_cable"
+    k_charger_connect_trigger_list: "{{ rc_tfleet_connect_trigger }}"
+    k_charger_connected_state_list: "{{ rc_tfleet_charger_connected }}"
+    k_charger_onoff_switch: "switch.{{ teslaCarName }}charge"
+    k_charger_charge_state: "sensor.{{ teslaCarName }}charging"
+    k_charger_charging_state_list: "{{ rc_tfleet_charging_state }}"
+    k_charger_current: "number.{{ teslaCarName }}charge_current"
+    k_ev_battery_level: "sensor.{{ teslaCarName }}battery_level"
+    k_ev_charge_limit: "number.{{ teslaCarName }}charge_limit"
+    k_ev_home_state: "device_tracker.{{ teslaCarName }}location"
+    k_ev_at_home_state_list: "{{ rc_tfleet_car_at_home }}"
+    k_ev_wake_up: "button.{{ teslaCarName }}wake"
+    k_ev_status_update: "{{ i_evForceUpdateHa }}"
+
+  i_bleVinId: !input ble_vin_id
+  bleVinId: "{{ i_bleVinId | lower }}"
+  teslaBleMqttApi:
+    k_charger_connect_state: "sensor.tesla_ble_{{ bleVinId }}_charge_cable"
+    k_charger_connect_trigger_list: "{{ rc_ble_connect_trigger }}"
+    k_charger_connected_state_list: "{{ rc_ble_charger_connected }}"
+    k_charger_onoff_switch: "switch.tesla_ble_{{ bleVinId }}_charger"
+    k_charger_charge_state: "sensor.tesla_ble_{{ bleVinId }}_charging_state"
+    k_charger_charging_state_list: "{{ rc_ble_charging_state }}"
+    k_charger_current: "number.tesla_ble_{{ bleVinId }}_charging_current"
+    k_ev_battery_level: "sensor.tesla_ble_{{ bleVinId }}_battery_level"
+    k_ev_charge_limit: "number.tesla_ble_{{ bleVinId }}_charging_limit"
+    k_ev_home_state: "{{ i_evHomeState }}"
+    k_ev_at_home_state_list: "{{ i_evAtHomeStateList | lower }}"
+    k_ev_wake_up: "button.tesla_ble_{{ bleVinId }}_wake_up_car"
+    k_ev_status_update: "button.tesla_ble_{{ bleVinId }}_force_update_charge"
+
+  i_ocppChargerName: !input ocpp_charger_name
+  ocppChargerName: "{{ i_ocppChargerName | lower }}"
+  e_ocppChargerId: "sensor.{{ ocppChargerName }}_id"
+  e_ocppChargerTransactionId: "sensor.{{ ocppChargerName }}_transaction_id"
+  ocppChargerApi:
+    k_charger_connect_state: "sensor.{{ ocppChargerName }}_status_connector"
+    k_charger_connect_trigger_list: "{{ rc_ocpp_connect_trigger }}"
+    k_charger_connected_state_list: "{{ rc_ocpp_charger_connected }}"
+    k_charger_onoff_switch: "switch.{{ ocppChargerName }}_charge_control"
+    k_charger_charge_state: "sensor.{{ ocppChargerName }}_status_connector"
+    k_charger_charging_state_list: "{{ rc_ocpp_charging_state }}"
+    k_charger_current: "sensor.{{ ocppChargerName }}_current_import"
+    k_ev_battery_level: "{{ i_evBatteryLevel }}"
+    k_ev_charge_limit: "{{ i_evChargeLimit }}"
+    k_ev_home_state: "{{ i_evHomeState }}"
+    k_ev_at_home_state_list: "{{ i_evAtHomeStateList | lower }}"
+    k_ev_wake_up: "{{ i_evWakeUp }}"
+    k_ev_status_update: "{{ i_evForceUpdateHa }}"
+
+  userCustomApi:
+    k_charger_connect_state: "{{ i_chargerConnectState }}"
+    k_charger_connect_trigger_list: "{{ i_chargerConnectTriggerList | lower }}"
+    k_charger_connected_state_list: "{{ i_chargerConnectedStateList | lower }}"
+    k_charger_onoff_switch: "{{ i_chargerSwitch }}"
+    k_charger_charge_state: "{{ i_chargerChargeState }}"
+    k_charger_charging_state_list: "{{ i_chargerChargingStateList | lower }}"
+    k_charger_current: "{{ i_chargerAmp }}"
+    k_ev_battery_level: "{{ i_evBatteryLevel }}"
+    k_ev_charge_limit: "{{ i_evChargeLimit }}"
+    k_ev_home_state: "{{ i_evHomeState }}"
+    k_ev_at_home_state_list: "{{ i_evAtHomeStateList | lower }}"
+    k_ev_wake_up: "{{ i_evWakeUp }}"
+    k_ev_status_update: "{{ i_evForceUpdateHa }}"
+
+  chargeApiMap:
+    k_tesla_custom_api: "{{ teslaCustomApi }}"
+    k_tesla_fleet_api: "{{ teslaFleetApi }}"
+    k_tesla_blemqtt_api: "{{ teslaBleMqttApi }}"
+    k_ocpp_charger_api: "{{ ocppChargerApi }}"
+    k_user_custom_api: "{{ userCustomApi }}"
+
+  chargeApiKey: !input select_charge_control_api
+  chargeApi: "{{ chargeApiMap[chargeApiKey] }}"
+
+###############################################################################
+# Triggers and conditions
+# Note:
+# - Tesla triggers do not update often due to infrequent polling.
+#   See https://github.com/alandtse/tesla/wiki/Polling-policy
+###############################################################################
 triggers:
   # Trigger action if just plugged in.
   - trigger: template
-    value_template: "{{ states(e_chargerConnectState) | lower in rc_chargerConnectTriggerList }}"
+    value_template: "{{ states(chargeApi[k_charger_connect_state]) | lower in chargeApi[k_charger_connect_trigger_list] }}"
 
   # Trigger action at elevation after sunrise.
   - trigger: numeric_state
@@ -847,15 +901,15 @@ conditions:
   # Car must be at location. OCPP charger will know when it is plugged in at location.
   - condition: template
     value_template: >
-      {% if has_value(e_evHomeState) %}
-        {{ states(e_evHomeState) | lower in rc_evAtHomeStateList }}
+      {% if has_value(chargeApi[k_ev_home_state]) %}
+        {{ states(chargeApi[k_ev_home_state]) | lower in chargeApi[k_ev_at_home_state_list] }}
       {% else %}
         {{ true }}
       {% endif %}
 
   # Charger must be plugged in.
   - condition: template
-    value_template: "{{ states(e_chargerConnectState) | lower in rc_chargerConnectedStateList }}"
+    value_template: "{{ states(chargeApi[k_charger_connect_state]) | lower in chargeApi[k_charger_connected_state_list] }}"
 
 ###############################################################################
 # Global constants and site specific variables
@@ -981,117 +1035,6 @@ variables:
   # Not all intervals are available for all providers. Possible values: "hourly", "twice_daily", "daily"
   forecastInterval: "daily"
 
-  #####################################
-  # Charge control API
-  #####################################
-  # https://community.home-assistant.io/t/how-to-use-if-then-statements-to-create-dictionary-variables-in-scripts/688152
-  # https://community.home-assistant.io/t/return-a-variable-which-is-a-dictionary-in-script-to-automation/796744/5
-  # Dictionaries can be defined here but not accessed here!
-  k_charger_connect_state: "k_charger_connect_state"
-  k_charger_connect_trigger_list: "k_charger_connect_trigger_list"
-  k_charger_connected_state_list: "k_charger_connected_state_list"
-  k_charger_onoff_switch: "k_charger_onoff_switch"
-  k_charger_charge_state: "k_charger_charge_state"
-  k_charger_charging_state_list: "k_charger_charging_state_list"
-  k_charger_current: "k_charger_current"
-  k_ev_battery_level: "k_ev_battery_level"
-  k_ev_charge_limit: "k_ev_charge_limit"
-  k_ev_home_state: "k_ev_home_state"
-  k_ev_at_home_state_list: "k_ev_at_home_state_list"
-  k_ev_wake_up: "k_ev_wake_up"
-  k_ev_status_update: "k_ev_status_update"
-
-  i_chargerConnectState: !input car_sensor_charger_pluggedin
-  i_chargerConnectTriggerList: !input charger_connect_trigger_list
-  i_chargerConnectedStateList: !input charger_connected_state_list
-  i_chargerSwitch: !input car_switch_charger
-  i_chargerChargeState: !input car_sensor_charging
-  i_chargerChargingStateList: !input charger_charging_state_list
-  i_chargerAmp: !input car_number_charging_amps
-  i_evBatteryLevel: !input car_sensor_battery
-  i_evChargeLimit: !input car_number_charge_limit
-  i_evHomeState: !input car_location_tracker
-  i_evAtHomeStateList: !input car_at_home_state_list
-  i_evWakeUp: !input car_button_wake_up
-  i_evForceUpdateHa: !input car_button_forceupdate_ha
-
-  teslaCustomApi:
-    k_charger_connect_state: "binary_sensor.{{ teslaCarName }}charger"
-    k_charger_connect_trigger_list: "{{ rc_tcustom_connect_trigger }}"
-    k_charger_connected_state_list: "{{ rc_tcustom_charger_connected }}"
-    k_charger_onoff_switch: "switch.{{ teslaCarName }}charger"
-    k_charger_charge_state: "binary_sensor.{{ teslaCarName }}charging"
-    k_charger_charging_state_list: "{{ rc_tcustom_charging_state }}"
-    k_charger_current: "number.{{ teslaCarName }}charging_amps"
-    k_ev_battery_level: "sensor.{{ teslaCarName }}battery"
-    k_ev_charge_limit: "number.{{ teslaCarName }}charge_limit"
-    k_ev_home_state: "device_tracker.{{ teslaCarName }}location_tracker"
-    k_ev_at_home_state_list: "{{ rc_tcustom_car_at_home }}"
-    k_ev_wake_up: "button.{{ teslaCarName }}wake_up"
-    k_ev_status_update: "button.{{ teslaCarName }}force_data_update"
-
-  teslaFleetApi:
-    k_charger_connect_state: "binary_sensor.{{ teslaCarName }}charge_cable"
-    k_charger_connect_trigger_list: "{{ rc_tfleet_connect_trigger }}"
-    k_charger_connected_state_list: "{{ rc_tfleet_charger_connected }}"
-    k_charger_onoff_switch: "switch.{{ teslaCarName }}charge"
-    k_charger_charge_state: "sensor.{{ teslaCarName }}charging"
-    k_charger_charging_state_list: "{{ rc_tfleet_charging_state }}"
-    k_charger_current: "number.{{ teslaCarName }}charge_current"
-    k_ev_battery_level: "sensor.{{ teslaCarName }}battery_level"
-    k_ev_charge_limit: "number.{{ teslaCarName }}charge_limit"
-    k_ev_home_state: "device_tracker.{{ teslaCarName }}location"
-    k_ev_at_home_state_list: "{{ rc_tfleet_car_at_home }}"
-    k_ev_wake_up: "button.{{ teslaCarName }}wake"
-    k_ev_status_update: "{{ i_evForceUpdateHa }}"
-
-  teslaBleMqttApi:
-    k_charger_connect_state: "sensor.tesla_ble_{{ bleVinId }}_charge_cable"
-    k_charger_connect_trigger_list: "{{ rc_ble_connect_trigger }}"
-    k_charger_connected_state_list: "{{ rc_ble_charger_connected }}"
-    k_charger_onoff_switch: "switch.tesla_ble_{{ bleVinId }}_charger"
-    k_charger_charge_state: "sensor.tesla_ble_{{ bleVinId }}_charging_state"
-    k_charger_charging_state_list: "{{ rc_ble_charging_state }}"
-    k_charger_current: "number.tesla_ble_{{ bleVinId }}_charging_current"
-    k_ev_battery_level: "sensor.tesla_ble_{{ bleVinId }}_battery_level"
-    k_ev_charge_limit: "number.tesla_ble_{{ bleVinId }}_charging_limit"
-    k_ev_home_state: "{{ i_evHomeState }}"
-    k_ev_at_home_state_list: "{{ i_evAtHomeStateList | lower }}"
-    k_ev_wake_up: "button.tesla_ble_{{ bleVinId }}_wake_up_car"
-    k_ev_status_update: "button.tesla_ble_{{ bleVinId }}_force_update_charge"
-
-  e_ocppChargerId: "sensor.{{ ocppChargerName }}_id"
-  e_ocppChargerTransactionId: "sensor.{{ ocppChargerName }}_transaction_id"
-  ocppChargerApi:
-    k_charger_connect_state: "sensor.{{ ocppChargerName }}_status_connector"
-    k_charger_connect_trigger_list: "{{ rc_ocpp_connect_trigger }}"
-    k_charger_connected_state_list: "{{ rc_ocpp_charger_connected }}"
-    k_charger_onoff_switch: "switch.{{ ocppChargerName }}_charge_control"
-    k_charger_charge_state: "sensor.{{ ocppChargerName }}_status_connector"
-    k_charger_charging_state_list: "{{ rc_ocpp_charging_state }}"
-    k_charger_current: "sensor.{{ ocppChargerName }}_current_import"
-    k_ev_battery_level: "{{ i_evBatteryLevel }}"
-    k_ev_charge_limit: "{{ i_evChargeLimit }}"
-    k_ev_home_state: "{{ i_evHomeState }}"
-    k_ev_at_home_state_list: "{{ i_evAtHomeStateList | lower }}"
-    k_ev_wake_up: "{{ i_evWakeUp }}"
-    k_ev_status_update: "{{ i_evForceUpdateHa }}"
-
-  userCustomApi:
-    k_charger_connect_state: "{{ i_chargerConnectState }}"
-    k_charger_connect_trigger_list: "{{ i_chargerConnectTriggerList | lower }}"
-    k_charger_connected_state_list: "{{ i_chargerConnectedStateList | lower }}"
-    k_charger_onoff_switch: "{{ i_chargerSwitch }}"
-    k_charger_charge_state: "{{ i_chargerChargeState }}"
-    k_charger_charging_state_list: "{{ i_chargerChargingStateList | lower }}"
-    k_charger_current: "{{ i_chargerAmp }}"
-    k_ev_battery_level: "{{ i_evBatteryLevel }}"
-    k_ev_charge_limit: "{{ i_evChargeLimit }}"
-    k_ev_home_state: "{{ i_evHomeState }}"
-    k_ev_at_home_state_list: "{{ i_evAtHomeStateList | lower }}"
-    k_ev_wake_up: "{{ i_evWakeUp }}"
-    k_ev_status_update: "{{ i_evForceUpdateHa }}"
-
 ###############################################################################
 # Actions
 ###############################################################################
@@ -1102,28 +1045,25 @@ actions:
   #####################################
   - variables:
 
-      chargeControlApiMap:
-        k_tesla_custom_api: "{{ teslaCustomApi }}"
-        k_tesla_fleet_api: "{{ teslaFleetApi }}"
-        k_tesla_blemqtt_api: "{{ teslaBleMqttApi }}"
-        k_ocpp_charger_api: "{{ ocppChargerApi }}"
-        k_user_custom_api: "{{ userCustomApi }}"
+      useTeslaCustomApi: "{{ chargeApiKey == k_tesla_custom_api }}"
+      useTeslaFleetApi: "{{ chargeApiKey == k_tesla_fleet_api }}"
+      useBleMqttApi: "{{ chargeApiKey == k_tesla_blemqtt_api }}"
+      useOcppChargerApi: "{{ chargeApiKey == k_ocpp_charger_api }}"
+      useUserCustomApi: "{{ chargeApiKey == k_user_custom_api }}"
 
-      chargeControlApi: "{{ chargeControlApiMap[chargeControlApiSelected] }}"
-    
-      e_chargerConnectState: "{{ chargeControlApi[k_charger_connect_state] }}"
-      rc_chargerConnectTriggerList: "{{ chargeControlApi[k_charger_connect_trigger_list] }}"
-      rc_chargerConnectedStateList: "{{ chargeControlApi[k_charger_connected_state_list] }}"
-      e_chargerSwitch: "{{ chargeControlApi[k_charger_onoff_switch] }}"
-      e_chargerChargeState: "{{ chargeControlApi[k_charger_charge_state] }}"
-      rc_chargerChargingStateList: "{{ chargeControlApi[k_charger_charging_state_list] }}"
-      e_chargerAmp: "{{ chargeControlApi[k_charger_current] }}"
-      e_evBatteryLevel: "{{ chargeControlApi[k_ev_battery_level] }}"
-      e_evChargeLimit: "{{ chargeControlApi[k_ev_charge_limit] }}"
-      e_evHomeState: "{{ chargeControlApi[k_ev_home_state] }}"
-      rc_evAtHomeStateList: "{{ chargeControlApi[k_ev_at_home_state_list] }}"
-      e_evWakeUp: "{{ chargeControlApi[k_ev_wake_up] }}"
-      e_evForceUpdateHa: "{{ chargeControlApi[k_ev_status_update] }}"
+      e_chargerConnectState: "{{ chargeApi[k_charger_connect_state] }}"
+      rc_chargerConnectTriggerList: "{{ chargeApi[k_charger_connect_trigger_list] }}"
+      rc_chargerConnectedStateList: "{{ chargeApi[k_charger_connected_state_list] }}"
+      e_chargerSwitch: "{{ chargeApi[k_charger_onoff_switch] }}"
+      e_chargerChargeState: "{{ chargeApi[k_charger_charge_state] }}"
+      rc_chargerChargingStateList: "{{ chargeApi[k_charger_charging_state_list] }}"
+      e_chargerAmp: "{{ chargeApi[k_charger_current] }}"
+      e_evBatteryLevel: "{{ chargeApi[k_ev_battery_level] }}"
+      e_evChargeLimit: "{{ chargeApi[k_ev_charge_limit] }}"
+      e_evHomeState: "{{ chargeApi[k_ev_home_state] }}"
+      rc_evAtHomeStateList: "{{ chargeApi[k_ev_at_home_state_list] }}"
+      e_evWakeUp: "{{ chargeApi[k_ev_wake_up] }}"
+      e_evForceUpdateHa: "{{ chargeApi[k_ev_status_update] }}"
 
   #####################################
   # Init car and charger
