@@ -1,6 +1,9 @@
 EV Solar Charger
 ================
 
+v3.0beta30  27/3/2025
+-   Fix for incorrect trigger state lists causing trigger failure for some APIs! Thanks @BJReplay for the hint.
+
 v3.0beta29  24/3/2025
 -   Breaking change: Tidied code for wait_api_update_ha delay time. Need to set "Wait status update" to 25 seconds for BLE MQTT API.
 -   Added option to set 0A OCPP current if available current is less than 6A.

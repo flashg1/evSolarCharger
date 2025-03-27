@@ -16,7 +16,7 @@ blueprint:
 
   name: EV solar charger automation
   description: >
-    Use OCPP and/or EV specific API to charge EV from excess solar and weather forecast (v3.0beta29).
+    Use OCPP and/or EV specific API to charge EV from excess solar and weather forecast (v3.0beta30).
     See https://github.com/flashg1/evSolarCharger for details.
 
 
@@ -797,13 +797,13 @@ trigger_variables:
   i_chargerConnectTriggerList: !input charger_connect_trigger_list
   rc_chargerConnectTriggerList: >
     {% if useTeslaCustomApi %}
-      rc_tcustom_connect_trigger
+      {{ rc_tcustom_connect_trigger }}
     {% elif useTeslaFleetApi %}
-      rc_tfleet_connect_trigger
+      {{ rc_tfleet_connect_trigger }}
     {% elif useBleMqttApi %}
-      rc_ble_connect_trigger
+      {{ rc_ble_connect_trigger }}
     {% elif useOcppChargerApi %}
-      rc_ocpp_connect_trigger
+      {{ rc_ocpp_connect_trigger }}
     {% else %}
       {{ i_chargerConnectTriggerList | lower }}
     {% endif %}
@@ -811,13 +811,13 @@ trigger_variables:
   i_chargerConnectedStateList: !input charger_connected_state_list
   rc_chargerConnectedStateList: >
     {% if useTeslaCustomApi %}
-      rc_tcustom_charger_connected
+      {{ rc_tcustom_charger_connected }}
     {% elif useTeslaFleetApi %}
-      rc_tfleet_charger_connected
+      {{ rc_tfleet_charger_connected }}
     {% elif useBleMqttApi %}
-      rc_ble_charger_connected
+      {{ rc_ble_charger_connected }}
     {% elif useOcppChargerApi %}
-      rc_ocpp_charger_connected
+      {{ rc_ocpp_charger_connected }}
     {% else %}
       {{ i_chargerConnectedStateList | lower }}
     {% endif %}
@@ -825,9 +825,9 @@ trigger_variables:
   i_evAtHomeStateList: !input car_at_home_state_list
   rc_evAtHomeStateList: >
     {% if useTeslaCustomApi %}
-      rc_tcustom_car_at_home
+      {{ rc_tcustom_car_at_home }}
     {% elif useTeslaFleetApi %}
-      rc_tfleet_car_at_home
+      {{ rc_tfleet_car_at_home }}
     {% else %}
       {{ i_evAtHomeStateList | lower }}
     {% endif %}
