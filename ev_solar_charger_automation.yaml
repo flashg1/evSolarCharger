@@ -451,7 +451,7 @@ blueprint:
       description: >
         Enter the Tesla BLE VIN ID for use with ***Tesla BLE MQTT API***.
         BLE VIN ID combines with base entity name to form a unique entity identifier.
-        If using Pi4b, must turn off all nearby Bluetooth devices to avoid interference.
+        If using RPi4b, must turn off all nearby Bluetooth devices to limit number of connected keys and interference.
           * Default:  vin
       default: "vin"
       selector:
