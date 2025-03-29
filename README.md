@@ -73,7 +73,7 @@ Device: Envoy [YourEnvoyId]
 -	Optionally create following helpers, or create them later for finer control, eg.
 Settings > Devices & Services > Helpers > Create Helper >
 1.	Toggle: MyEV set daily car charge limit
-2.  Number: MyEV publish car charge limit
+2.  Number: MyEV publish car charge limit (only required if setting charge limit is not supported by car specific API)
 3.	Toggle: MyEV secondary power source (for night time charging)
 4.  Number or template sensor: MyEV charger minimum current
 5.	Number or template sensor: MyEV power offset
