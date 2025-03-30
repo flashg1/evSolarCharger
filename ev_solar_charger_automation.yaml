@@ -16,7 +16,7 @@ blueprint:
 
   name: EV solar charger automation
   description: >
-    Use OCPP and/or EV specific API to charge EV from excess solar and weather forecast (v3.0beta30).
+    Use OCPP and/or EV specific API to charge EV from excess solar and weather forecast (v3.0beta31).
     See https://github.com/flashg1/evSolarCharger for details.
 
 
@@ -1098,26 +1098,6 @@ actions:
     then:
       - stop: "Exiting script because car is not at home, otherwise the script will affect car if charging elsewhere."
 
-  # https://www.ampcontrol.io/ocpp-guide/how-to-use-smart-charging-with-ocpp#:~:text=This%20is%20used%20to%20stack,manner%20if%20connectivity%20is%20lost.
-  - alias: "Get charge profile max stack level if using OCPP. This stack level will be used to override all others."
-    if:
-      - condition: template
-        value_template: "{{ useOcppChargerApi }}"
-    then:
-      - action: ocpp.get_configuration
-        data:
-          devid: "{{ states(e_ocppChargerId) }}"
-          ocpp_key: "ChargeProfileMaxStackLevel"
-        response_variable: ocpp_max_stack_level
-
-  - variables:
-      ocppStackLevel: >
-        {% if useOcppChargerApi %}
-          {{ ocpp_max_stack_level['value'] | int }}
-        {% else %}
-          {{ 0 }}
-        {% endif %}
-
   #####################################
   # Set car charge limit on start up
   #####################################
@@ -1450,13 +1430,21 @@ actions:
                   - condition: template
                     value_template: "{{ useOcppChargerApi }}"
                 then:
+                  # https://www.ampcontrol.io/ocpp-guide/how-to-use-smart-charging-with-ocpp#:~:text=This%20is%20used%20to%20stack,manner%20if%20connectivity%20is%20lost.
+                  - alias: "Get OCPP charge profile max stack level. This stack level will be used to override all others."
+                    action: ocpp.get_configuration
+                    data:
+                      devid: "{{ states(e_ocppChargerId) }}"
+                      ocpp_key: "ChargeProfileMaxStackLevel"
+                    response_variable: ocppMaxStackLevelMap
+
                   - action: ocpp.set_charge_rate     
                     data:
                       custom_profile: |
                         {
                           "transactionId": {{ states(e_ocppChargerTransactionId) | int }},
                           "chargingProfileId": 1,
-                          "stackLevel": {{ ocppStackLevel }},
+                          "stackLevel": {{ ocppMaxStackLevelMap['value'] | int }},
                           "chargingProfilePurpose": "TxProfile",
                           "chargingProfileKind": "Relative",
                           "chargingSchedule": {
@@ -1514,9 +1502,9 @@ actions:
               - stop: |
                   Exiting script due to charger turned off manually or automatically by car when charge limit reached.
                   If this is unexpected, try increasing wait time for "Wait status update".
-                # https://www.home-assistant.io/docs/scripts/#stopping-a-script-sequence
-                # Cannot get response_variable to work. Needs to be key/value pair?
-                #response_variable: "stop_charging_reason"
+              # https://www.home-assistant.io/docs/scripts/#stopping-a-script-sequence
+              # Cannot get response_variable to work. Needs to be key/value pair?
+              #response_variable: "stop_charging_reason"
 
           #####################################
           # Change charging current if required
@@ -1536,7 +1524,7 @@ actions:
                         {
                           "transactionId": {{ states(e_ocppChargerTransactionId) | int }},
                           "chargingProfileId": 1,
-                          "stackLevel": {{ ocppStackLevel }},
+                          "stackLevel": {{ ocppMaxStackLevelMap['value'] | int }},
                           "chargingProfilePurpose": "TxProfile",
                           "chargingProfileKind": "Relative",
                           "chargingSchedule": {
@@ -1610,13 +1598,19 @@ actions:
           - condition: template
             value_template: "{{ useOcppChargerApi }}"
         then:
+          - action: ocpp.get_configuration
+            data:
+              devid: "{{ states(e_ocppChargerId) }}"
+              ocpp_key: "ChargeProfileMaxStackLevel"
+            response_variable: ocppMaxStackLevelMap
+
           - action: ocpp.set_charge_rate
             data:
               custom_profile: |
                 {
                   "transactionId": {{ states(e_ocppChargerTransactionId) | int }},
                   "chargingProfileId": 1,
-                  "stackLevel": {{ ocppStackLevel }},
+                  "stackLevel": {{ ocppMaxStackLevelMap['value'] | int }},
                   "chargingProfilePurpose": "TxProfile",
                   "chargingProfileKind": "Relative",
                   "chargingSchedule": {
