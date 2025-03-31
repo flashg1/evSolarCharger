@@ -1066,7 +1066,7 @@ actions:
       e_evForceUpdateHa: "{{ chargeApi[k_ev_status_update] }}"
 
   #####################################
-  # Init car and charger
+  # Init car
   #####################################
   - if:
       - condition: template
