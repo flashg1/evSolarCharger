@@ -29,7 +29,7 @@ Features
 -   Beta feature: Use EV specific API to control a EV for charging, and/or use OCPP to control an OCPP compliant charger to charge a EV.  Only tested with [OCPP simulator](https://github.com/lewei50/iammeter-simulator) and Tesla car, hence this Blueprint might not work with your OCPP charger or EV.
 
 
-**💡 Tip:** Please :star: this project if you like my work, and may be also buy me coffee!
+**💡 Tip:** Please :star: this project if you find it useful, and may be also buy me a coffee!
 
 <a href="https://www.buymeacoffee.com/flashg1" target="_blank">
   <img src="https://cdn.buymeacoffee.com/buttons/default-black.png" alt="Buy Me A Coffee" width="150px">
