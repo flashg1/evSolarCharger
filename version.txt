@@ -3,6 +3,7 @@ EV Solar Charger
 
 v3.0beta31  31/3/2025
 -   Get OCPP ChargeProfileMaxStackLevel after switching on OCPP charger.
+-   Updated doc.
 
 v3.0beta30  27/3/2025
 -   Fixed incorrect trigger state lists for all APIs but only causing trigger failure for OCPP and BLE APIs! Thanks @BJReplay for the hint.
