@@ -30,10 +30,7 @@ Features
 
 
 **💡 Tip:** Please :star: this project if you find it useful, and may be also buy me a coffee!
-
-<a href="https://www.buymeacoffee.com/flashg1" target="_blank">
-  <img src="https://cdn.buymeacoffee.com/buttons/default-black.png" alt="Buy Me A Coffee" width="150px">
-</a>
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/flashg1)
 
 
 My setup

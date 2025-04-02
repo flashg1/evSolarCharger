@@ -16,7 +16,7 @@ blueprint:
 
   name: EV solar charger automation
   description: >
-    Use OCPP and/or EV specific API to charge EV from excess solar and weather forecast (v3.0beta31).
+    Use OCPP and/or EV specific API to charge EV from excess solar and weather forecast (v3.0beta32).
     See https://github.com/flashg1/evSolarCharger for details.
 
 
@@ -247,92 +247,78 @@ blueprint:
       name: Monday
       description: >
         Car charge limit for day (valid range: 50 - 100).
-          * Default:  70
-      default: 70
+          * The default is 70% if not defined.
+      default: number.user_custom
       selector:
-        number:
-          min: 50
-          max: 100
-          unit_of_measurement: percent
-          mode: slider
+        entity:
+          domain:
+            - input_number
 
     car_charge_limit_tuesday:
       name: Tuesday
       description: >
         Car charge limit for day (valid range: 50 - 100).
-          * Default:  70
-      default: 70
+          * The default is 70% if not defined.
+      default: number.user_custom
       selector:
-        number:
-          min: 50
-          max: 100
-          unit_of_measurement: percent
-          mode: slider
+        entity:
+          domain:
+            - input_number
 
     car_charge_limit_wednesday:
       name: Wednesday
       description: >
         Car charge limit for day (valid range: 50 - 100).
-          * Default:  70
-      default: 70
+          * The default is 70% if not defined.
+      default: number.user_custom
       selector:
-        number:
-          min: 50
-          max: 100
-          unit_of_measurement: percent
-          mode: slider
+        entity:
+          domain:
+            - input_number
 
     car_charge_limit_thursday:
       name: Thursday
       description: >
         Car charge limit for day (valid range: 50 - 100).
-          * Default:  70
-      default: 70
+          * The default is 70% if not defined.
+      default: number.user_custom
       selector:
-        number:
-          min: 50
-          max: 100
-          unit_of_measurement: percent
-          mode: slider
+        entity:
+          domain:
+            - input_number
 
     car_charge_limit_friday:
       name: Friday
       description: >
         Car charge limit for day (valid range: 50 - 100).
-          * Default:  80
-      default: 80
+          * The default is 80% if not defined.
+      default: number.user_custom
       selector:
-        number:
-          min: 50
-          max: 100
-          unit_of_measurement: percent
-          mode: slider
+        entity:
+          domain:
+            - input_number
 
     car_charge_limit_saturday:
       name: Saturday
       description: >
         Car charge limit for day (valid range: 50 - 100).
-          * Default:  80
-      default: 80
+          * The default is 80% if not defined.
+      default: number.user_custom
       selector:
-        number:
-          min: 50
-          max: 100
-          unit_of_measurement: percent
-          mode: slider
+        entity:
+          domain:
+            - input_number
 
     car_charge_limit_sunday:
       name: Sunday
       description: >
         Car charge limit for day (valid range: 50 - 100).
-          * Default:  80
-      default: 80
+          * The default is 80% if not defined.
+      default: number.user_custom
       selector:
-        number:
-          min: 50
-          max: 100
-          unit_of_measurement: percent
-          mode: slider
+        entity:
+          domain:
+            - input_number
 
     #####################################
     # Weather forecast
@@ -342,10 +328,11 @@ blueprint:
       description: >
         Automatically adjust to the highest charge limit set within a rainy forecast period.
         Daily car charge limit and weather provider settings must be configured.
-          * Default:  off
-      default: false
+          * The default is off if not defined.
+      default: boolean.user_custom
       selector:
-        boolean:
+        entity:
+          domain: input_boolean
 
     weather_provider:
       name: Weather provider
@@ -988,7 +975,6 @@ variables:
   
   sunriseElevationStartTrigger: !input sunrise_elevation_start_trigger
   sunsetElevationEndTrigger: !input sunset_elevation_end_trigger
-  chargeCarBaseOnWeather: !input charge_car_base_on_weather
 
   # Power = Voltage * Current
   # The power step in watts to increase or decrease with 1A current change.
@@ -1012,21 +998,33 @@ variables:
   #####################################
   # Set car charge limit based on which week day
   #####################################
-  mon: !input car_charge_limit_monday
-  tue: !input car_charge_limit_tuesday
-  wed: !input car_charge_limit_wednesday
-  thu: !input car_charge_limit_thursday
-  fri: !input car_charge_limit_friday
-  sat: !input car_charge_limit_saturday
-  sun: !input car_charge_limit_sunday
+  i_chargeLimitMon: !input car_charge_limit_monday
+  i_chargeLimitTue: !input car_charge_limit_tuesday
+  i_chargeLimitWed: !input car_charge_limit_wednesday
+  i_chargeLimitThu: !input car_charge_limit_thursday
+  i_chargeLimitFri: !input car_charge_limit_friday
+  i_chargeLimitSat: !input car_charge_limit_saturday
+  i_chargeLimitSun: !input car_charge_limit_sunday
   
+  # Use separate automation to save defaults and restore defaults.
+  chargeLimitMon: "{% if has_value(i_chargeLimitMon) %}{{ states(i_chargeLimitMon) }}{%else {{ 70 }} %}{% endif %}"
+  chargeLimitTue: "{% if has_value(i_chargeLimitTue) %}{{ states(i_chargeLimitTue) }}{%else {{ 70 }} %}{% endif %}"
+  chargeLimitWed: "{% if has_value(i_chargeLimitWed) %}{{ states(i_chargeLimitWed) }}{%else {{ 70 }} %}{% endif %}"
+  chargeLimitThu: "{% if has_value(i_chargeLimitThu) %}{{ states(i_chargeLimitThu) }}{%else {{ 70 }} %}{% endif %}"
+  chargeLimitFri: "{% if has_value(i_chargeLimitFri) %}{{ states(i_chargeLimitFri) }}{%else {{ 80 }} %}{% endif %}"
+  chargeLimitSat: "{% if has_value(i_chargeLimitSat) %}{{ states(i_chargeLimitSat) }}{%else {{ 80 }} %}{% endif %}"
+  chargeLimitSun: "{% if has_value(i_chargeLimitSun) %}{{ states(i_chargeLimitSun) }}{%else {{ 80 }} %}{% endif %}"
+
   # Store as integer list
-  carChargeLimitList: "{{ [mon, tue, wed, thu, fri, sat, sun] }}"
+  carChargeLimitList: "{{ [chargeLimitMon, chargeLimitTue, chargeLimitWed, chargeLimitThu, chargeLimitFri, chargeLimitSat, chargeLimitSun] }}"
   todayIndex: "{{ now().weekday() }}"
 
   #####################################
   # Set car charge limit based on weather forecast
   #####################################
+  i_chargeCarBaseOnWeather: !input charge_car_base_on_weather
+  chargeCarBaseOnWeather: "{% if has_value(i_chargeCarBaseOnWeather) %}{{ states(i_chargeCarBaseOnWeather) }}{%else {{ false }} %}{% endif %}"
+
   e_weatherProvider: !input weather_provider
   forecastIndex: !input forecast_index
   forecastAttribute: !input forecast_attribute
