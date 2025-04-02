@@ -323,7 +323,7 @@ blueprint:
     #####################################
     # Weather forecast
     #####################################
-    charge_car_base_on_weather:
+    charge_car_based_on_weather:
       name: Adjust daily car charge limit based on weather
       description: >
         Automatically adjust to the highest charge limit set within a rainy forecast period.
@@ -992,12 +992,14 @@ variables:
   e_powerOffsetFromZero: !input power_offset_from_zero
   e_useSecondaryPowerSource: !input toggle_secondary_power_source
   e_stopCharger: !input toggle_stop_charger
-  e_setDailyCarChargeLimit: !input toggle_set_daily_car_charge_limit
-  e_publishCarChargeLimit: !input publish_car_charge_limit
 
   #####################################
   # Set car charge limit based on which week day
   #####################################
+  i_setDailyCarChargeLimit: !input toggle_set_daily_car_charge_limit
+  setDailyCarChargeLimit: "{% if has_value(i_setDailyCarChargeLimit) %}{{ states(i_setDailyCarChargeLimit) }}{% else %}{{ 'off' }}{% endif %}"
+  e_publishCarChargeLimit: !input publish_car_charge_limit
+
   i_chargeLimitMon: !input car_charge_limit_monday
   i_chargeLimitTue: !input car_charge_limit_tuesday
   i_chargeLimitWed: !input car_charge_limit_wednesday
@@ -1007,13 +1009,13 @@ variables:
   i_chargeLimitSun: !input car_charge_limit_sunday
   
   # Use separate automation to save defaults and restore defaults.
-  chargeLimitMon: "{% if has_value(i_chargeLimitMon) %}{{ states(i_chargeLimitMon) }}{%else {{ 70 }} %}{% endif %}"
-  chargeLimitTue: "{% if has_value(i_chargeLimitTue) %}{{ states(i_chargeLimitTue) }}{%else {{ 70 }} %}{% endif %}"
-  chargeLimitWed: "{% if has_value(i_chargeLimitWed) %}{{ states(i_chargeLimitWed) }}{%else {{ 70 }} %}{% endif %}"
-  chargeLimitThu: "{% if has_value(i_chargeLimitThu) %}{{ states(i_chargeLimitThu) }}{%else {{ 70 }} %}{% endif %}"
-  chargeLimitFri: "{% if has_value(i_chargeLimitFri) %}{{ states(i_chargeLimitFri) }}{%else {{ 80 }} %}{% endif %}"
-  chargeLimitSat: "{% if has_value(i_chargeLimitSat) %}{{ states(i_chargeLimitSat) }}{%else {{ 80 }} %}{% endif %}"
-  chargeLimitSun: "{% if has_value(i_chargeLimitSun) %}{{ states(i_chargeLimitSun) }}{%else {{ 80 }} %}{% endif %}"
+  chargeLimitMon: "{% if has_value(i_chargeLimitMon) %}{{ states(i_chargeLimitMon) | int }}{% else %}{{ 70 }}{% endif %}"
+  chargeLimitTue: "{% if has_value(i_chargeLimitTue) %}{{ states(i_chargeLimitTue) | int }}{% else %}{{ 70 }}{% endif %}"
+  chargeLimitWed: "{% if has_value(i_chargeLimitWed) %}{{ states(i_chargeLimitWed) | int }}{% else %}{{ 70 }}{% endif %}"
+  chargeLimitThu: "{% if has_value(i_chargeLimitThu) %}{{ states(i_chargeLimitThu) | int }}{% else %}{{ 70 }}{% endif %}"
+  chargeLimitFri: "{% if has_value(i_chargeLimitFri) %}{{ states(i_chargeLimitFri) | int }}{% else %}{{ 80 }}{% endif %}"
+  chargeLimitSat: "{% if has_value(i_chargeLimitSat) %}{{ states(i_chargeLimitSat) | int }}{% else %}{{ 80 }}{% endif %}"
+  chargeLimitSun: "{% if has_value(i_chargeLimitSun) %}{{ states(i_chargeLimitSun) | int }}{% else %}{{ 80 }}{% endif %}"
 
   # Store as integer list
   carChargeLimitList: "{{ [chargeLimitMon, chargeLimitTue, chargeLimitWed, chargeLimitThu, chargeLimitFri, chargeLimitSat, chargeLimitSun] }}"
@@ -1022,8 +1024,8 @@ variables:
   #####################################
   # Set car charge limit based on weather forecast
   #####################################
-  i_chargeCarBaseOnWeather: !input charge_car_base_on_weather
-  chargeCarBaseOnWeather: "{% if has_value(i_chargeCarBaseOnWeather) %}{{ states(i_chargeCarBaseOnWeather) }}{%else {{ false }} %}{% endif %}"
+  i_chargeCarBasedOnWeather: !input charge_car_based_on_weather
+  chargeCarBasedOnWeather: "{% if has_value(i_chargeCarBasedOnWeather) %}{{ states(i_chargeCarBasedOnWeather) }}{% else %}{{ 'off' }}{% endif %}"
 
   e_weatherProvider: !input weather_provider
   forecastIndex: !input forecast_index
@@ -1062,6 +1064,13 @@ actions:
       rc_evAtHomeStateList: "{{ chargeApi[k_ev_at_home_state_list] }}"
       e_evWakeUp: "{{ chargeApi[k_ev_wake_up] }}"
       e_evForceUpdateHa: "{{ chargeApi[k_ev_status_update] }}"
+
+      debug_chargeLimitConfig: |
+        setDailyCarChargeLimit={{ setDailyCarChargeLimit }}
+        todayIndex={{ todayIndex }}
+        carChargeLimitList={{ carChargeLimitList }}
+        chargeCarBasedOnWeather={{ chargeCarBasedOnWeather }}
+        carChargeLimitOnBadWeather={{ carChargeLimitOnBadWeather }}
 
   #####################################
   # Init car
@@ -1110,14 +1119,14 @@ actions:
     - conditions:
         - alias: "If set daily car charge limit on start up"
           condition: template
-          value_template: "{{ has_value(e_setDailyCarChargeLimit) and is_state(e_setDailyCarChargeLimit, 'on') }}"
+          value_template: "{{ setDailyCarChargeLimit == 'on' }}"
 
       # Then set charge limit base on config
       sequence:
         - if:
             - alias: "If charge car based on weather"
               condition: template
-              value_template: "{{ chargeCarBaseOnWeather }}"
+              value_template: "{{ chargeCarBasedOnWeather == 'on' }}"
           then:
             - alias: "Then get weather forecast data"
               action: weather.get_forecasts
@@ -1128,15 +1137,10 @@ actions:
               response_variable: weather_forecast
 
         - variables:
-            debug_chargeLimitConfig: |
-              todayIndex={{todayIndex}}
-              carChargeLimitList={{carChargeLimitList}}
-              carChargeLimitOnBadWeather={{carChargeLimitOnBadWeather}}
-
             # Period forecast list excluding today
             periodForecastList: >
               {% set data = namespace(strings=[]) %}
-              {% if chargeCarBaseOnWeather %}
+              {% if chargeCarBasedOnWeather == 'on' %}
                 {% for day in range(1, forecastIndex + 1, 1) %}
                   {% set data.strings = data.strings + [weather_forecast[e_weatherProvider]['forecast'][day][forecastAttribute]] %}
                 {% endfor %}
@@ -1144,7 +1148,7 @@ actions:
               {{ data.strings }}
 
             weatherToday: >
-              {% if chargeCarBaseOnWeather %}
+              {% if chargeCarBasedOnWeather == 'on' %}
                 {{ weather_forecast[e_weatherProvider]['forecast'][0][forecastAttribute] }}
               {% else %}
                 {{ "weather forecast disabled" }}
@@ -1166,7 +1170,7 @@ actions:
             # See https://www.home-assistant.io/integrations/weather/
             # Some possible values: rainy, cloudy, partlycloudy, clear-night
             finalCarChargeLimit: >
-              {% if chargeCarBaseOnWeather
+              {% if chargeCarBasedOnWeather == 'on'
               and 'rainy' in periodForecastList
               and badWeatherPeriodMaxChargeLimit > todayCarChargeLimit %}
                 {{ badWeatherPeriodMaxChargeLimit }}
@@ -1238,15 +1242,15 @@ actions:
   #####################################
   - variables:
       debug_states: |
-        e_stopCharger={% if has_value(e_stopCharger) %}{{ states(e_stopCharger) }}{% else %}{{ 'Not supported' }}{% endif %}
-        e_useSecondaryPowerSource={% if has_value(e_useSecondaryPowerSource) %}{{ states(e_useSecondaryPowerSource) }}{% else %}{{ 'Not supported' }}{% endif %}
+        e_stopCharger={% if has_value(e_stopCharger) %}{{ states(e_stopCharger) }}{% else %}{{ 'Not defined' }}{% endif %}
+        e_useSecondaryPowerSource={% if has_value(e_useSecondaryPowerSource) %}{{ states(e_useSecondaryPowerSource) }}{% else %}{{ 'Not defined' }}{% endif %}
         e_sunElevation={{ state_attr('sun.sun', 'elevation') }}
-        e_evHomeState={% if has_value(e_evHomeState) %}{{ states(e_evHomeState) }}{% else %}{{ 'Not supported' }}{% endif %}
+        e_evHomeState={% if has_value(e_evHomeState) %}{{ states(e_evHomeState) }}{% else %}{{ 'Not defined' }}{% endif %}
         e_chargerConnectState={{ states(e_chargerConnectState) }}
         e_chargerSwitch={{ states(e_chargerSwitch) }}
         e_chargerChargeState={{ states(e_chargerChargeState) }}
-        e_evBatteryLevel={% if has_value(e_evBatteryLevel) %}{{ states(e_evBatteryLevel) }}{% else %}{{ 'Not supported' }}{% endif %}
-        e_evChargeLimit={% if has_value(e_evChargeLimit) %}{{ states(e_evChargeLimit) }}{% else %}{{ 'Not supported' }}{% endif %}
+        e_evBatteryLevel={% if has_value(e_evBatteryLevel) %}{{ states(e_evBatteryLevel) }}{% else %}{{ 'Not defined' }}{% endif %}
+        e_evChargeLimit={% if has_value(e_evChargeLimit) %}{{ states(e_evChargeLimit) }}{% else %}{{ 'Not defined' }}{% endif %}
 
   - repeat:
       #####################################
@@ -1574,15 +1578,15 @@ actions:
 
         - variables:
             debug_states: |
-              e_stopCharger={% if has_value(e_stopCharger) %}{{ states(e_stopCharger) }}{% else %}{{ 'Not supported' }}{% endif %}
-              e_useSecondaryPowerSource={% if has_value(e_useSecondaryPowerSource) %}{{ states(e_useSecondaryPowerSource) }}{% else %}{{ 'Not supported' }}{% endif %}
+              e_stopCharger={% if has_value(e_stopCharger) %}{{ states(e_stopCharger) }}{% else %}{{ 'Not defined' }}{% endif %}
+              e_useSecondaryPowerSource={% if has_value(e_useSecondaryPowerSource) %}{{ states(e_useSecondaryPowerSource) }}{% else %}{{ 'Not defined' }}{% endif %}
               e_sunElevation={{ state_attr('sun.sun', 'elevation') }}
-              e_evHomeState={% if has_value(e_evHomeState) %}{{ states(e_evHomeState) }}{% else %}{{ 'Not supported' }}{% endif %}
+              e_evHomeState={% if has_value(e_evHomeState) %}{{ states(e_evHomeState) }}{% else %}{{ 'Not defined' }}{% endif %}
               e_chargerConnectState={{ states(e_chargerConnectState) }}
               e_chargerSwitch={{ states(e_chargerSwitch) }}
               e_chargerChargeState={{ states(e_chargerChargeState) }}
-              e_evBatteryLevel={% if has_value(e_evBatteryLevel) %}{{ states(e_evBatteryLevel) }}{% else %}{{ 'Not supported' }}{% endif %}
-              e_evChargeLimit={% if has_value(e_evChargeLimit) %}{{ states(e_evChargeLimit) }}{% else %}{{ 'Not supported' }}{% endif %}
+              e_evBatteryLevel={% if has_value(e_evBatteryLevel) %}{{ states(e_evBatteryLevel) }}{% else %}{{ 'Not defined' }}{% endif %}
+              e_evChargeLimit={% if has_value(e_evChargeLimit) %}{{ states(e_evChargeLimit) }}{% else %}{{ 'Not defined' }}{% endif %}
 
   #####################################
   # Exit script

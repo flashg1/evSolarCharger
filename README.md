@@ -30,6 +30,7 @@ Features
 
 
 **💡 Tip:** Please :star: this project if you find it useful, and may be also buy me a coffee!
+
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/flashg1)
 
 

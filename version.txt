@@ -2,7 +2,7 @@ EV Solar Charger
 ================
 
 v3.0beta32  2/4/2025
--   Breaking change: Daily charge limits are now number helpers.
+-   Breaking change: Daily charge limits and "Adjust charge limit based on weather" are now helpers.
 
 v3.0beta31  31/3/2025
 -   Get OCPP ChargeProfileMaxStackLevel after switching on OCPP charger.
