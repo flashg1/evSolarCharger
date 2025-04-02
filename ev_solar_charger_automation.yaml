@@ -16,8 +16,8 @@ blueprint:
 
   name: EV solar charger automation
   description: >
-    Use OCPP and/or EV specific API to charge EV from excess solar and weather forecast (v3.0beta32).
-    See https://github.com/flashg1/evSolarCharger for details.
+    Use OCPP and/or EV specific API to charge EV from excess solar and weather forecast.
+    See [github project page](https://github.com/flashg1/evSolarCharger) for details.
 
 
     The following configs are required as a minimum for a functional Blueprint:
@@ -25,6 +25,16 @@ blueprint:
       * Charger voltage and maximum current
       * Charge control API selection
       * Car or charger unique identifier
+
+
+    **Version**: v3.0beta32
+
+
+    Your support is much appreciated if you find this project useful.
+
+
+    [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/flashg)
+
   domain: automation
 
   #####################################
