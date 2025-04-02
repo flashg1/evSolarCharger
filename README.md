@@ -19,7 +19,7 @@ Features
 -   Charge from excess solar adjusting car charging current according to feedback loop value "Main Power Net".  The "Main Power Net" sensor expresses negative value in Watts for available power for charging car, or positive value for consumed power.
 -   Support multi-day solar charging using sun elevation triggers to start and stop.
 -   Compatible with off-peak night time charging.
--   Configurable daily car charge limit for 7 days.  Default is to use existing charge limit already set in car.
+-   Configurable 7 days charge limit schedule.  Default is to use existing charge limit already set in car.
 -   Automatically adjust to the highest charge limit set within a rainy forecast period.  The highest charge limit is selected from the 7 days charge limit settings that are within the forecast period taking into account the charge limit on bad weather setting.  The objective is to charge more before a rainy period.  Default disabled.
 -   Might be possible to prolong car battery life by setting daily charge limit to 70%, and only charge more before a rainy period by enabling option to adjust daily car charge limit based on weather.
 -   Allow top up from secondary power source (eg. grid, battery) if there is not enough solar during the day, or if required to charge during the night. Just need to set the power offset to specify the maximum power to draw from secondary power source. Also need to toggle on secondary power source if required to charge during the night.
