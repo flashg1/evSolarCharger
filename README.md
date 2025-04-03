@@ -71,11 +71,13 @@ Device: Envoy [YourEnvoyId]
 -	Optionally create following helpers, or create them later for finer control, eg.
 Settings > Devices & Services > Helpers > Create Helper >
 1.	Toggle: MyEV set daily car charge limit
-2.  Number: MyEV publish car charge limit (only required if setting charge limit is not supported by car specific API)
-3.	Toggle: MyEV secondary power source (for night time charging)
-4.  Number or template sensor: MyEV charger minimum current
-5.	Number or template sensor: MyEV power offset
-6.	Toggle: MyEV stop charging
+2.	Toggle: MyEV adjust charge limit based on weather
+3.	Number: MyEV charge limit Monday .. Sunday
+4.  Number: MyEV publish car charge limit (only required if setting charge limit is not supported by car specific API)
+5.	Toggle: MyEV secondary power source (for night time charging)
+6.  Number or template sensor: MyEV charger minimum current
+7.	Number or template sensor: MyEV power offset
+8.	Toggle: MyEV stop charging
 
 -	Config the Blueprint automation specifying the power feedback loop sensor, charger voltage, maximum current, charge control API selection and the optional helper entities created above, ie.
 Settings > Automations & Scenes > Blueprints > EV solar charger automation
