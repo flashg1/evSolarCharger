@@ -1334,7 +1334,7 @@ actions:
                 - alias: "Continue if sun is above start or end elevations"
                   condition: template
                   value_template: >
-                    {{ (is_state_attr('sun.sun', 'rising', true) and state_attr('sun.sun', 'elevation') > sunriseElevationStartTrigger)
+                    {{ (is_state_attr('sun.sun', 'rising', true) and state_attr('sun.sun', 'elevation') >= sunriseElevationStartTrigger)
                     or (is_state_attr('sun.sun', 'rising', false) and state_attr('sun.sun', 'elevation') > sunsetElevationEndTrigger) }}
 
       sequence:
