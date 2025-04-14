@@ -237,22 +237,6 @@ blueprint:
         entity:
           domain: input_boolean
 
-    publish_car_charge_limit:
-      name: Publish car charge limit
-      description: >
-        Placeholder for car charge limit (Settings > Devices & Services > Helpers > Create helper > Number).
-        This is only required if EV specific API to set charge limit is not supported, in which case user will need to set charge limit in EV and here.
-        The script will stop charging once this charge limit is reached.
-        Value is determined by script on start up if set daily car charge limit is toggled on, otherwise value need to be set by user.
-
-
-        Note: Requires car battery level sensor for this to work, otherwise this published charge limit is ignored, and charge limit set in EV will control when to stop charging.
-          * The default is to ignore this published charge limit if not defined.
-      default: number.user_custom
-      selector:
-        entity:
-          domain: input_number
-
     car_charge_limit_monday:
       name: Monday
       description: >
@@ -608,7 +592,8 @@ blueprint:
       name: EV charge limit (optional)
       description: >
         Entity to control car battery charge limit in percentage (100% = fully charged).
-        EV specific integration must be installed to use this entity.
+        If setting charge limit is not supported by EV specific API, then number helper can be used to keep track of charge limit provided EV battery level sensor is available.
+        Otherwise charge limit is ignored, and charge limit set in EV will control when to stop charging.
         Config is automatically defined for the selected API unless it is marked as ***Not defined***.
           * Tesla Custom: number.[CarName_]charge_limit
           * Tesla Fleet:  number.[CarName_]charge_limit
@@ -618,7 +603,9 @@ blueprint:
       default: number.user_custom
       selector:
         entity:
-          domain: number
+          domain:
+            - number
+            - input_number
 
     car_location_tracker:
       name: EV location tracker (optional)
@@ -1007,7 +994,6 @@ variables:
   #####################################
   i_setDailyCarChargeLimit: !input toggle_set_daily_car_charge_limit
   setDailyCarChargeLimit: "{% if has_value(i_setDailyCarChargeLimit) %}{{ states(i_setDailyCarChargeLimit) }}{% else %}{{ 'off' }}{% endif %}"
-  e_publishCarChargeLimit: !input publish_car_charge_limit
 
   i_chargeLimitMon: !input car_charge_limit_monday
   i_chargeLimitTue: !input car_charge_limit_tuesday
@@ -1099,7 +1085,7 @@ actions:
       - condition: template
         value_template: "{{ has_value(e_evForceUpdateHa) }}"
     then:
-      - action: button.press
+      - action: "{{ states[e_evForceUpdateHa]['domain'] }}.press"
         data: {}
         target:
           entity_id: "{{ e_evForceUpdateHa }}"
@@ -1205,29 +1191,19 @@ actions:
             - condition: template
               value_template: "{{ has_value(e_evChargeLimit) }}"
           then:
-            - action: number.set_value
+            - action: "{{ states[e_evChargeLimit]['domain'] }}.set_value"
               data:
                 value: "{{ finalCarChargeLimit }}"
               target:
                 entity_id: "{{ e_evChargeLimit }}"
             - delay: "{{ wait_charge_limit }}"
 
-        # Publish final car charge limit as global variable to be used later on in script.
-        - if:
-            - condition: template
-              value_template: "{{ has_value(e_publishCarChargeLimit) }}"
-          then:
-            - action: input_number.set_value
-              data_template:
-                entity_id: "{{ e_publishCarChargeLimit }}"
-                value: "{{ finalCarChargeLimit }}"
-
         # Car charger is turned on if setting higher charge limit, so must get latest update before proceeding. Otherwise script can exit without turning off charger.
         - if:
             - condition: template
               value_template: "{{ has_value(e_evForceUpdateHa) }}"
           then:
-            - action: button.press
+            - action: "{{ states[e_evForceUpdateHa]['domain'] }}.press"
               data: {}
               target:
                 entity_id: "{{ e_evForceUpdateHa }}"
@@ -1235,16 +1211,8 @@ actions:
         # Tesla BLE need 25 seconds here.
         - delay: "{{ waitApiUpdateHa }}"
 
-    # Don't set daily car charge limit, so just copy charge limit from API if available. Otherwise publish_car_charge_limit must be set by user.
+    # Do nothing. Don't set daily car charge limit. Charge limit must be set by user.
     default:
-      - if:
-          - condition: template
-            value_template: "{{ has_value(e_evChargeLimit) and has_value(e_publishCarChargeLimit) }}"
-        then:
-          - action: input_number.set_value
-            data_template:
-              entity_id: "{{ e_publishCarChargeLimit }}"
-              value: "{{ states(e_evChargeLimit) | int }}"
 
   #####################################
   # Main while loop
@@ -1312,15 +1280,10 @@ actions:
             - alias: "Continue if battery is below charge limit"
               condition: template
               value_template: >
-                {% if has_value(e_evBatteryLevel) and (has_value(e_evChargeLimit) or has_value(e_publishCarChargeLimit)) %}
-                    {% if has_value(e_evChargeLimit) %}
-                      {% set evChargeLimit = states(e_evChargeLimit) | int %}
-                    {% else %}
-                      {% set evChargeLimit = states(e_publishCarChargeLimit) | int %}
-                    {% endif %}
-                    {{ (states(e_evBatteryLevel) | int) < evChargeLimit }}
+                {% if has_value(e_evBatteryLevel) and has_value(e_evChargeLimit) %}
+                  {{ (states(e_evBatteryLevel) | int) < (states(e_evChargeLimit) | int) }}
                 {% else %}
-                    {{ true }}
+                  {{ true }}
                 {% endif %}
 
             - condition: or
@@ -1493,7 +1456,7 @@ actions:
                     value_template: "{{ has_value(e_evForceUpdateHa) }}"
                 then:
                   - alias: "Get the latest data from Tesla to update HA before exiting script"
-                    action: button.press
+                    action: "{{ states[e_evForceUpdateHa]['domain'] }}.press"
                     data: {}
                     target:
                       entity_id: "{{ e_evForceUpdateHa }}"
@@ -1559,7 +1522,7 @@ actions:
             - condition: template
               value_template: "{{ has_value(e_evForceUpdateHa) }}"
           then:
-            - action: button.press
+            - action: "{{ states[e_evForceUpdateHa]['domain'] }}.press"
               data: {}
               target:
                 entity_id: "{{ e_evForceUpdateHa }}"
@@ -1646,7 +1609,7 @@ actions:
       - condition: template
         value_template: "{{ has_value(e_evForceUpdateHa) }}"
     then:
-      - action: button.press
+      - action: "{{ states[e_evForceUpdateHa]['domain'] }}.press"
         data: {}
         target:
           entity_id: "{{ e_evForceUpdateHa }}"
