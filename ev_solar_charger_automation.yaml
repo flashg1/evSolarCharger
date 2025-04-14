@@ -27,7 +27,7 @@ blueprint:
       * Car or charger unique identifier
 
 
-    **Version**: v3.0beta32
+    **Version**: v3.0beta33
 
 
     Your support is much appreciated if you find this project useful.
@@ -257,7 +257,7 @@ blueprint:
       name: Monday
       description: >
         Car charge limit for day (valid range: 50 - 100).
-          * The default is 70% if not defined.
+          * The default is 60% if not defined.
       default: number.user_custom
       selector:
         entity:
@@ -268,7 +268,7 @@ blueprint:
       name: Tuesday
       description: >
         Car charge limit for day (valid range: 50 - 100).
-          * The default is 70% if not defined.
+          * The default is 60% if not defined.
       default: number.user_custom
       selector:
         entity:
@@ -279,7 +279,7 @@ blueprint:
       name: Wednesday
       description: >
         Car charge limit for day (valid range: 50 - 100).
-          * The default is 70% if not defined.
+          * The default is 60% if not defined.
       default: number.user_custom
       selector:
         entity:
@@ -290,7 +290,7 @@ blueprint:
       name: Thursday
       description: >
         Car charge limit for day (valid range: 50 - 100).
-          * The default is 70% if not defined.
+          * The default is 60% if not defined.
       default: number.user_custom
       selector:
         entity:
@@ -301,7 +301,7 @@ blueprint:
       name: Friday
       description: >
         Car charge limit for day (valid range: 50 - 100).
-          * The default is 80% if not defined.
+          * The default is 70% if not defined.
       default: number.user_custom
       selector:
         entity:
@@ -312,7 +312,7 @@ blueprint:
       name: Saturday
       description: >
         Car charge limit for day (valid range: 50 - 100).
-          * The default is 80% if not defined.
+          * The default is 70% if not defined.
       default: number.user_custom
       selector:
         entity:
@@ -323,7 +323,7 @@ blueprint:
       name: Sunday
       description: >
         Car charge limit for day (valid range: 50 - 100).
-          * The default is 80% if not defined.
+          * The default is 60% if not defined.
       default: number.user_custom
       selector:
         entity:
@@ -382,8 +382,8 @@ blueprint:
       description: >
         Car charge limit to set on bad weather forecast (valid range: 50 - 100).
         This will be used unless there is a higher setting within the forecast period.
-          * Default:  80
-      default: 80
+          * Default:  70
+      default: 70
       selector:
         number:
           min: 50
@@ -678,14 +678,16 @@ blueprint:
         EV specific integration must be installed to use this entity.
         Config is automatically defined for the selected API unless it is marked as ***Not defined***.
           * Tesla Custom: button.[CarName_]force_data_update
-          * Tesla Fleet:  ***Not defined*** (See [vehicle sleep](https://www.home-assistant.io/integrations/tesla_fleet/#vehicle-sleep) for [polling](https://www.home-assistant.io/common-tasks/general/#defining-a-custom-polling-interval) and [cost](https://alerts.home-assistant.io/alerts/tesla_fleet/).)
+          * Tesla Fleet:  ***Not defined*** (See [suggestion](https://github.com/flashg1/evSolarCharger/wiki/Configuration#tesla-fleet-api-charging-status-not-up-to-date). See [vehicle sleep](https://www.home-assistant.io/integrations/tesla_fleet/#vehicle-sleep) for [polling](https://www.home-assistant.io/common-tasks/general/#defining-a-custom-polling-interval) and [cost](https://alerts.home-assistant.io/alerts/tesla_fleet/).)
           * Tesla BLE:    button.tesla_ble_[vin]_force_update_charge (Enable in Settings > Devices & services > MQTT > Entities)
           * OCPP:         ***Not defined***
           * User custom:  ***Not defined***
       default: button.user_custom
       selector:
         entity:
-          domain: button
+          domain:
+            - button
+            - input_button
 
 ###############################################################################
 # Trigger variables
@@ -927,7 +929,6 @@ variables:
 
   # Time to wait in seconds to turn charger on or off.
   # To switch on charger from 2V to 230V and then ram up current, it took 16 seconds for initial_charge_current 15A.
-  #wait_charger_on: 16
   # To switch on charger from 2V to 230V and then ram up current, it took 11 seconds for initial_charge_current 6A.
   wait_charger_on: 11
   wait_charger_off: 5
@@ -935,18 +936,16 @@ variables:
   # Time to wait in seconds for current to change after sending command.
   #wait_current_change: "00:00:0.3"
   wait_current_change: 1
+  #wait_current_change_str: "00:00:{{ wait_current_change }}"
 
   # Wait in seconds after setting car charge limit.
   wait_charge_limit: 5
 
-  # Time to wait in seconds for command to execute after sending command.
-  wait_fleet_api_update: 5
-  #wait_fleet_api_update_str: "00:00:{{ wait_fleet_api_update }}"
-
   # Valid charge limit range for Tesla API, otherwise will get following error,
   # Error: Value 0.0 for number.charge_limit is outside valid range 50 - 100
-  car_charge_limit_min: 50
-  car_charge_limit_max: 100
+  charge_limit_min: 50
+  charge_limit_max: 100
+  charge_limit_default: 60
 
   #####################################
   # Inputs
@@ -1019,13 +1018,13 @@ variables:
   i_chargeLimitSun: !input car_charge_limit_sunday
   
   # Use separate automation to save defaults and restore defaults.
-  chargeLimitMon: "{% if has_value(i_chargeLimitMon) %}{{ states(i_chargeLimitMon) | int }}{% else %}{{ 70 }}{% endif %}"
-  chargeLimitTue: "{% if has_value(i_chargeLimitTue) %}{{ states(i_chargeLimitTue) | int }}{% else %}{{ 70 }}{% endif %}"
-  chargeLimitWed: "{% if has_value(i_chargeLimitWed) %}{{ states(i_chargeLimitWed) | int }}{% else %}{{ 70 }}{% endif %}"
-  chargeLimitThu: "{% if has_value(i_chargeLimitThu) %}{{ states(i_chargeLimitThu) | int }}{% else %}{{ 70 }}{% endif %}"
-  chargeLimitFri: "{% if has_value(i_chargeLimitFri) %}{{ states(i_chargeLimitFri) | int }}{% else %}{{ 80 }}{% endif %}"
-  chargeLimitSat: "{% if has_value(i_chargeLimitSat) %}{{ states(i_chargeLimitSat) | int }}{% else %}{{ 80 }}{% endif %}"
-  chargeLimitSun: "{% if has_value(i_chargeLimitSun) %}{{ states(i_chargeLimitSun) | int }}{% else %}{{ 80 }}{% endif %}"
+  chargeLimitMon: "{% if has_value(i_chargeLimitMon) %}{{ states(i_chargeLimitMon) | int }}{% else %}{{ charge_limit_default }}{% endif %}"
+  chargeLimitTue: "{% if has_value(i_chargeLimitTue) %}{{ states(i_chargeLimitTue) | int }}{% else %}{{ charge_limit_default }}{% endif %}"
+  chargeLimitWed: "{% if has_value(i_chargeLimitWed) %}{{ states(i_chargeLimitWed) | int }}{% else %}{{ charge_limit_default }}{% endif %}"
+  chargeLimitThu: "{% if has_value(i_chargeLimitThu) %}{{ states(i_chargeLimitThu) | int }}{% else %}{{ charge_limit_default }}{% endif %}"
+  chargeLimitFri: "{% if has_value(i_chargeLimitFri) %}{{ states(i_chargeLimitFri) | int }}{% else %}{{ charge_limit_default + 10 }}{% endif %}"
+  chargeLimitSat: "{% if has_value(i_chargeLimitSat) %}{{ states(i_chargeLimitSat) | int }}{% else %}{{ charge_limit_default + 10 }}{% endif %}"
+  chargeLimitSun: "{% if has_value(i_chargeLimitSun) %}{{ states(i_chargeLimitSun) | int }}{% else %}{{ charge_limit_default }}{% endif %}"
 
   # Store as integer list
   carChargeLimitList: "{{ [chargeLimitMon, chargeLimitTue, chargeLimitWed, chargeLimitThu, chargeLimitFri, chargeLimitSat, chargeLimitSun] }}"
@@ -1475,17 +1474,6 @@ actions:
                       entity_id: "{{ e_chargerAmp }}"
               - delay: "{{ wait_current_change }}"
 
-              # Tesla Fleet API does not have force update button, so should be ok to poll once here for everything.
-              - if:
-                  - condition: template
-                    value_template: "{{ useTeslaFleetApi }}"
-                then:
-                  - action: homeassistant.update_entity
-                    data:
-                      entity_id:
-                        - "{{ e_chargerChargeState }}"
-                  - delay: "{{ wait_fleet_api_update }}"
-
           #####################################
           # Exit script if car is not charging
           #####################################
@@ -1565,6 +1553,7 @@ actions:
 
         # Sometimes the charging status is not updated after turning on charger causing script to exit in while loop. Best to get status now.
         # Tesla BLE MQTT took 110 sec for force_update_all, but only 13 sec for force_update_charge.
+        # Tesla Fleet API does not have force update button, so might need to create helper button to poll Tesla Fleet API here.
         # Get latest conditions from Tesla to update HA as last step before checking these conditions at beginning of repeat loop.
         - if:
             - condition: template

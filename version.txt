@@ -1,6 +1,10 @@
 EV Solar Charger
 ================
 
+v3.0beta33  14/4/2025
+-   Breaking change: Default daily charge limits reduced by 10%.
+-   Breaking change: Suggest to create button to force Tesla Fleet API update.
+
 v3.0beta32  2/4/2025
 -   Breaking change: Daily charge limits and "Adjust charge limit based on weather" are now helpers.
 -   Updated doc.
