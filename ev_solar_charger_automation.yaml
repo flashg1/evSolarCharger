@@ -593,7 +593,7 @@ blueprint:
       description: >
         Entity to control car battery charge limit in percentage (100% = fully charged).
         If setting charge limit is not supported by the selected API, then set number helper here to keep track of charge limit.
-        EV battery level sensor must be supported by the selected API, otherwise charge limit is ignored, and charge limit set in EV will control when to stop charging.
+        EV battery level sensor must be supported by the selected API, otherwise charge limit entity is ignored, and charge limit set in EV will control when to stop charging.
         Config is automatically defined for the selected API unless it is marked as ***Not defined***.
           * Tesla Custom: number.[CarName_]charge_limit
           * Tesla Fleet:  number.[CarName_]charge_limit
