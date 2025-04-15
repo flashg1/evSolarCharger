@@ -21,7 +21,7 @@ Features
 -   Compatible with off-peak night time charging.
 -   Configurable 7 days charge limit schedule.  Default is to use existing charge limit already set in car.
 -   Automatically adjust to the highest charge limit set within a rainy forecast period.  The highest charge limit is selected from the 7 days charge limit settings that are within the forecast period taking into account the charge limit on bad weather setting.  The objective is to charge more before a rainy period.  Default disabled.
--   Might be possible to prolong car battery life by setting daily charge limit to 70%, and only charge more before a rainy period by enabling option to adjust daily car charge limit based on weather.
+-   Might be possible to prolong car battery life by setting daily charge limit to 60%, and only charge more before a rainy period by enabling option to adjust daily car charge limit based on weather.
 -   Allow top up from secondary power source (eg. grid, battery) if there is not enough solar during the day, or if required to charge during the night. Just need to set the power offset to specify the maximum power to draw from secondary power source. Also need to toggle on secondary power source if required to charge during the night.
 -   Support setting minimum charge current if there is not enough solar electricity.
 -   Support charging multiple cars at the same time based on power allocation weighting for each car.
@@ -69,18 +69,22 @@ Device: Envoy [YourEnvoyId]
 -	Import the Blueprint automatically by clicking above, or manually copy the Blueprint file to following location and reload HA config,
 \\HOMEASSISTANT\config\blueprints\automation\flashg1\ev_solar_charger_automation.yaml
 
+-	Create following non-optional helpers, eg.
+Settings > Devices & Services > Helpers > Create Helper >
+1.  Number or template sensor: MyEV charger effective voltage (for single-phase or 3-phase system)
+
 -	Optionally create following helpers, or create them later for finer control, eg.
 Settings > Devices & Services > Helpers > Create Helper >
+1.  Number or template sensor: MyEV charger minimum current
+1.	Number or template sensor: MyEV power offset
+1.	Toggle: MyEV secondary power source (for night time charging)
 1.	Toggle: MyEV set daily charge limit
-2.	Toggle: MyEV adjust charge limit based on weather
-3.	Number: MyEV charge limit Monday .. Sunday
-4.  Number: MyEV publish charge limit (only required if setting charge limit is not supported by car specific API)
-5.	Toggle: MyEV secondary power source (for night time charging)
-6.  Number or template sensor: MyEV charger minimum current
-7.	Number or template sensor: MyEV power offset
-8.	Toggle: MyEV stop charging
+1.	Toggle: MyEV adjust charge limit based on weather
+1.	Number: MyEV charge limit Monday .. Sunday
+1.  Number: MyEV publish charge limit (only required if setting charge limit is not supported by car specific API)
+1.	Toggle: MyEV stop charging
 
--	Config the Blueprint automation specifying the power feedback loop sensor, charger voltage, maximum current, charge control API selection and the optional helper entities created above, ie.
+-	Config the Blueprint automation specifying the power feedback loop sensor, charger effective voltage, maximum current, charge control API selection and the optional helper entities created above, ie.
 Settings > Automations & Scenes > Blueprints > EV solar charger automation
 
 
