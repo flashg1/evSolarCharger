@@ -59,8 +59,8 @@ blueprint:
       name: Charger voltage
       description: >
         Specify charger voltage in Volt.
-        In Australia, single phase is 230V, and three phase is 400V due to 120 degree phase angle between phases.
-        See [here](https://github.com/flashg1/TeslaSolarCharger/issues/18) for setting voltage for 3 phase charger.
+        In Australia, single-phase is 230V, and 400V between 2 active wires in a 3-phase system due to 120 degree phase angle between phases.
+        See [here](https://github.com/flashg1/TeslaSolarCharger/issues/18) for setting voltage for 3-phase charger.
       default: 230
       selector:
         number:
