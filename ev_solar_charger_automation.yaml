@@ -22,7 +22,7 @@ blueprint:
 
     The following configs are required as a minimum for a functional Blueprint:
       * Main power net
-      * Charger voltage and maximum current
+      * Charger effective voltage and maximum current
       * Charge control API selection
       * Car or charger unique identifier
 
@@ -55,19 +55,17 @@ blueprint:
         entity:
           domain: sensor
 
-    charger_voltage:
-      name: Charger voltage
+    charger_effective_voltage:
+      name: Charger effective voltage
       description: >
-        Specify charger voltage in Volt.
-        In Australia, single-phase is 230V, and 400V between 2 active wires in a 3-phase system due to 120 degree phase angle between phases.
+        Sensor or number helper to specify charger effective voltage in Volts for single-phase or 3-phase system.
+        In Australia, set 230V for single-phase or 690V for 3-phase. (For a 3-phase system, voltage between any 2 phases is 230*√3≈400V due to 120 degree angle between phases.)
         See [here](https://github.com/flashg1/TeslaSolarCharger/issues/18) for setting voltage for 3-phase charger.
-      default: 230
       selector:
-        number:
-          min: 110
-          max: 750
-          unit_of_measurement: volt
-          mode: box
+        entity:
+          domain:
+            - sensor
+            - input_number
 
     charger_max_current:
       name: Charger maximum current
@@ -941,7 +939,6 @@ variables:
   # Extra delay required for BLE MQTT to register change in charging state. Need minimum 8 seconds for Tesla BLE.
   waitApiUpdateHa: !input wait_status_update
 
-  chargerVoltage: !input charger_voltage
   chargerMaxCurrent: !input charger_max_current
   chargerMinWorkableCurrent: !input charger_min_workable_current
 
@@ -952,7 +949,7 @@ variables:
   #
   # Lower skewed power = P*skew*(-1) - P/2
   # Upper skewed power = P*skew*(-1) + P/2
-  # where P = oneAmpWattStep = chargerVoltage * 1A, eg. 230W
+  # where P = oneAmpWattStep = e_chargerEffectiveVoltage * 1A, eg. 230W
   #
   # To test current decrease by 1A with skew=+0.3, set e_mainPowerNet=47W
   # To test current increase by 1A with skew=+0.3, set e_mainPowerNet=-185W
@@ -972,10 +969,6 @@ variables:
   sunriseElevationStartTrigger: !input sunrise_elevation_start_trigger
   sunsetElevationEndTrigger: !input sunset_elevation_end_trigger
 
-  # Power = Voltage * Current
-  # The power step in watts to increase or decrease with 1A current change.
-  oneAmpWattStep: "{{ chargerVoltage * 1 }}"
-
   #####################################
   # e_ => External entities
   # Must use states() to access external entities.
@@ -984,6 +977,7 @@ variables:
   # sensor_main_power_net expresses negative value in Watts for available power for charging car or positive value for consumed power.
   e_mainPowerNet: !input sensor_main_power_net
 
+  e_chargerEffectiveVoltage: !input charger_effective_voltage
   e_chargerMinCurrent: !input charger_min_current
   e_powerOffsetFromZero: !input power_offset_from_zero
   e_useSecondaryPowerSource: !input toggle_secondary_power_source
@@ -1330,12 +1324,17 @@ actions:
             # Feedback loop power sensor (default 0 set by float(0) if cannot convert to float).
             feedbackLoopPower: "{{ states(e_mainPowerNet) | float(0) }}"
 
+            # Power = Voltage * Current
+            # The power step in watts to increase or decrease with 1A current change.
+            chargerEffectiveVoltage: "{{ states(e_chargerEffectiveVoltage) | float }}"
+            oneAmpWattStep: "{{ chargerEffectiveVoltage * 1 }}"
+
             # Net power from all sources.
             allPowerNet: "{{ feedbackLoopPower + (oneAmpWattStep * powerDrawSkew) + powerOffset }}"
 
             # This can be greater than chargerMaxCurrent.
             # +ve => importing amp from grid, -ve => exporting amp to grid
-            allCurrentNet: "{{ (allPowerNet / oneAmpWattStep) | float }}"
+            allCurrentNet: "{{ (allPowerNet / chargerEffectiveVoltage) | float }}"
 
             # Charge current for this sequence run, including sanity check to ensure within limits. OCPP has current with 1 decimal place.
             chargeCurrent: "{{ states(e_chargerAmp) | round(0) }}"
