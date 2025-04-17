@@ -6,6 +6,7 @@ v3.0beta33  14/4/2025
 -   Breaking change: Suggest to create button helper to force Tesla Fleet API update.
 -   Breaking change: Can use either EV specific API or number helper to track charge limit.
 -   Breaking change: Create sensor or input number for charger effective voltage for more accurate calculation.
+-   Removed lower case conversion for states comparison, ie. states are now case sensitive.
 
 v3.0beta32  2/4/2025
 -   Breaking change: Daily charge limits and "Adjust charge limit based on weather" are now helpers.
