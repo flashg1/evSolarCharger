@@ -60,7 +60,7 @@ blueprint:
       description: >
         Sensor or number helper to specify charger effective voltage in Volts for single-phase or 3-phase system.
         In Australia, set 230V for single-phase or 690V for 3-phase. (For a 3-phase system, voltage between any 2 phases is 230*√3≈400V due to 120 degree angle between phases.)
-        See [here](https://github.com/flashg1/TeslaSolarCharger/issues/18) for setting voltage for 3-phase charger.
+        See [here](https://github.com/flashg1/evSolarCharger/wiki/Configuration#create-charger-effective-voltage-sensor-for-3-phase-system) for setting voltage for 3-phase charger.
       selector:
         entity:
           domain:
