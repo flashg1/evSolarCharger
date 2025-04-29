@@ -1642,109 +1642,6 @@ actions:
               - delay: "{{ wait_current_change }}"
 
           #####################################
-          # Charging stopped due to charge completion or car unplugged.
-          #####################################
-          # - conditions:
-          #     - alias: "Check next end time if charging has stopped"
-          #       condition: template
-          #       value_template: "{{ not states(e_chargerChargeState) in rc_chargerChargingStateList }}"
-          #   sequence:
-          #     - alias: "Always turn off charger just in case if charging status issue, eg. not up-to-date"
-          #       action: switch.turn_off
-          #       data: {}
-          #       target:
-          #         entity_id: "{{ e_chargerSwitch }}"
-          #     - delay: "{{ wait_charger_off }}"
-          #     - if:
-          #         - condition: template
-          #           value_template: "{{ has_value(e_evForceUpdateHa) }}"
-          #       then:
-          #         - alias: "Get the latest data from Tesla to update HA before exiting script"
-          #           action: "{{ states[e_evForceUpdateHa]['domain'] }}.press"
-          #           data: {}
-          #           target:
-          #             entity_id: "{{ e_evForceUpdateHa }}"
-          #     - delay: "{{ waitApiUpdateHa }}"
-
-          #     - variables:
-          #         nowTime: "{{ now() }}"
-          #         # Tomorrow has charge end time ?
-          #         tomorrowIdx: "{{ ( now().weekday() + 1 ) % 7 }}"
-          #         tomorrowHasChargeEndTime: >
-          #           {% if setDailyChargeLimit == 'on' %}
-          #             {{ chargeLimitList[tomorrowIdx][k_chargeCompletionTime] != charge_completion_time_default }}
-          #           {% else %}
-          #             {{ false }}
-          #           {% endif %}
-          #         # Calculate tomorrow charge end time
-          #         tomorrowChargeEndTime: "{{ today_at('00:00:00') + timedelta(hours = 24) + as_timedelta(chargeLimitList[tomorrowIdx][k_chargeCompletionTime]) }}"
-          #         tomorrowChargeStartTime: "{{ (state_attr('sun.sun', 'next_rising') | as_datetime + timedelta(seconds = (centreOfSunDegreeBelowHorizonAtSunrise + sunriseElevationStartTrigger) * secondsPerDegreeSunrise)) | as_timestamp | timestamp_local }}"
-          #         tomorrowAvailableChargeDuration: "{{ tomorrowChargeEndTime | as_timestamp - tomorrowChargeStartTime | as_timestamp }}"
-          #         tomorrowNeedChargeDuration: >
-          #           {% if has_value(e_evBatteryLevel) and has_value(e_evChargeLimit) %}
-          #             {{ (states(e_evChargeLimit) | int - states(e_evBatteryLevel) | int) * maxChargeRateHourPerPercent * 60 * 60 }}
-          #           {% else %}
-          #             {{ 100 * maxChargeRateHourPerPercent * 60 * 60 }}
-          #           {% endif %}
-          #         tomorrowProposeChargeStartTime: "{{ tomorrowChargeEndTime | as_datetime - timedelta(seconds = tomorrowNeedChargeDuration) }}"
-          #         tomorrowNewChargeStartTime: >
-          #           {% if tomorrowProposeChargeStartTime <= nowTime %}
-          #             {{ nowTime | as_datetime + timedelta(minutes = 2) }}
-          #           {% else %}
-          #             {{ tomorrowProposeChargeStartTime }}
-          #           {% endif %}
-
-          #     - alias: "Set trigger time if need to meet next charge completion time"
-          #       if:
-          #         - condition: template
-          #           value_template: "{{ tomorrowHasChargeEndTime and tomorrowNeedChargeDuration >= tomorrowAvailableChargeDuration }}"
-          #       then:
-          #         - action: input_datetime.set_datetime
-          #           target:
-          #             entity_id: "{{ e_nextChargeTimeTrigger }}"
-          #           data:
-          #             timestamp: "{{ tomorrowNewChargeStartTime | as_timestamp }}"
-
-          #     - stop: |
-          #         Exiting script due to charger turned off manually or automatically by car when charge limit reached.
-          #         If this is unexpected, try increasing wait time for "Wait status update".
-          #     # https://www.home-assistant.io/docs/scripts/#stopping-a-script-sequence
-          #     # Cannot get response_variable to work. Needs to be key/value pair?
-          #     #response_variable: "stop_charging_reason"
-
-          #####################################
-          # Exit script if car is not charging
-          #####################################
-          # - conditions:
-          #     - alias: "Exit script if car is not charging"
-          #       condition: template
-          #       value_template: "{{ not states(e_chargerChargeState) in rc_chargerChargingStateList }}"
-          #   sequence:
-          #     - alias: "Always turn off charger just in case if charging status issue, eg. not up-to-date"
-          #       action: switch.turn_off
-          #       data: {}
-          #       target:
-          #         entity_id: "{{ e_chargerSwitch }}"
-          #     - delay: "{{ wait_charger_off }}"
-          #     - if:
-          #         - condition: template
-          #           value_template: "{{ has_value(e_evForceUpdateHa) }}"
-          #       then:
-          #         - alias: "Get the latest data from Tesla to update HA before exiting script"
-          #           action: "{{ states[e_evForceUpdateHa]['domain'] }}.press"
-          #           data: {}
-          #           target:
-          #             entity_id: "{{ e_evForceUpdateHa }}"
-          #     # Moved status wait out of if statement to apply wait for all just before exit.
-          #     - delay: "{{ waitApiUpdateHa }}"
-          #     - stop: |
-          #         Exiting script due to charger turned off manually or automatically by car when charge limit reached.
-          #         If this is unexpected, try increasing wait time for "Wait status update".
-          #     # https://www.home-assistant.io/docs/scripts/#stopping-a-script-sequence
-          #     # Cannot get response_variable to work. Needs to be key/value pair?
-          #     #response_variable: "stop_charging_reason"
-
-          #####################################
           # Change charging current if required
           #####################################
           - conditions:
@@ -1937,6 +1834,10 @@ actions:
 
 # Exiting script due to charger turned off manually or automatically by car when charge limit reached.
 # If this is unexpected, try increasing wait time for "Wait status update".
+# https://www.home-assistant.io/docs/scripts/#stopping-a-script-sequence
+# Cannot get response_variable to work. Needs to be key/value pair?
+#response_variable: "stop_charging_reason"
+
 ###############################################################################
 # Only one Blueprint can run at any one time
 ###############################################################################
