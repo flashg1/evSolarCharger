@@ -829,7 +829,7 @@ trigger_variables:
   rc_ocpp_connect_trigger: "{{ ['Preparing'] }}"
   rc_ocpp_charging_state: "{{ ['Charging', 'SuspendedEV', 'SuspendedEVSE'] }}"
   rc_ocpp_charger_done: "{{ ['Finishing'] }}"
-  rc_ocpp_charger_connected: "{{ rc_ocpp_connect_trigger + rc_ocpp_charging_state + rc_ocpp_charger_done + ['Available'] }}"
+  rc_ocpp_charger_connected: "{{ rc_ocpp_connect_trigger + rc_ocpp_charging_state + rc_ocpp_charger_done }}"
 
   #####################################
   # Charge control API
