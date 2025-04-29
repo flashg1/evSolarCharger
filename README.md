@@ -27,6 +27,7 @@ Features
 -   Support charging multiple cars at the same time based on power allocation weighting for each car.
 -   Support skew to shift the power export/import curve left or right to achieve your minimal power import.
 -   Configurable return codes for comparison with connect trigger states, connected states and charging states returned by your EV or charger specific API. These states are used to determine the stages of the charging process.
+-   Support just-in-time schedule charging to required charge limit.
 -   Use EV specific API to control a EV for charging, and/or use OCPP to control an OCPP compliant charger to charge a EV. Only tested with [OCPP simulator](https://github.com/lewei50/iammeter-simulator) and Tesla car. OCPP and Tesla Fleet API support in beta testing phase.
 
 

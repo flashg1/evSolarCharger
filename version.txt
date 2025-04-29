@@ -1,6 +1,10 @@
 EV Solar Charger
 ================
 
+v3.0beta34  28/4/2025
+-   Breaking change: Implemented just-in-time schedule charging to required charge limit. Need to create "Next charge time trigger" datetime helper.
+-   Updated doc.
+
 v3.0beta33  14/4/2025
 -   Breaking change: Default daily charge limits reduced by 10%.
 -   Breaking change: Suggest to create button helper to force Tesla Fleet API update.

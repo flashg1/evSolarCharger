@@ -23,11 +23,15 @@ blueprint:
     The following configs are required as a minimum for a functional Blueprint:
       * Main power net
       * Charger effective voltage and maximum current
+      * Next charge time trigger
       * Charge control API selection
       * Car or charger unique identifier
 
 
-    **Version**: v3.0beta33
+    Helpers can be created on form or at Settings > Devices & Services > Helpers > Create helper.
+
+
+    **Version**: v3.0beta34
 
 
     Your support is much appreciated if you find this project useful.
@@ -48,7 +52,7 @@ blueprint:
     sensor_main_power_net:
       name: Main power net
       description: >
-        Sensor that expresses negative value in Watts for available power for charging car or positive value for consumed power.
+        Sensor that expresses negative value in Watts for available power for charging or positive value for consumed power.
         This sensor is the feedback loop for adjusting power consumption.
       default: sensor.main_power_net
       selector:
@@ -78,10 +82,22 @@ blueprint:
           unit_of_measurement: amp
           mode: box
 
+    next_charge_time_trigger:
+      name: Next charge time trigger
+      description: >
+        ***Create datetime helper with both date and time selected.***
+        The datetime helper will be used to trigger this automation to meet charge completion time outside of daylight hours.
+        If required, this automation will automatically set the helper date and time.
+        (Trigger entities must be defined whether they are used or not.)
+      selector:
+        entity:
+          domain:
+            - input_datetime
+
     charger_min_current:
       name: Charger minimum current
       description: >
-        Specify the minimum car charging current when there is not enough solar electricity (Settings > Devices & Services > Helpers > Create helper > Number or Template).
+        Number or template sensor to specify the minimum charging current when there is not enough solar electricity.
           * The default is 0A if not defined.
       default: number.user_custom
       selector:
@@ -184,7 +200,7 @@ blueprint:
     power_offset_from_zero:
       name: Power offset for import from or export to secondary power source (eg. grid/battery)
       description: >
-        Sensor to specify maximum power flow to or from secondary power source at all times (Settings > Devices & Services > Helpers > Create helper > Number or Template).
+        Number or template sensor to specify maximum power flow to or from secondary power source at all times.
         Set negative value to import from secondary power source, or positive value to export to secondary power source.
         Suggest to set to 0 Watt to charge from solar only.
           * The default is 0W if not defined.
@@ -199,7 +215,8 @@ blueprint:
     toggle_secondary_power_source:
       name: Secondary power source toggle for night time charging
       description: >
-        Toggle on to charge from secondary power source (eg. grid/battery) at night using power offset or minimum current (Settings > Devices & Services > Helpers > Create helper > Toggle).
+        Create toggle helper.
+        Toggle on to charge from secondary power source (eg. grid/battery) at night using power offset or minimum current.
         Toggle off to charge car during daytime only.
           * The default is off if not defined.
       default: boolean.user_custom
@@ -210,7 +227,8 @@ blueprint:
     toggle_stop_charger:
       name: Stop charger toggle
       description: >
-        Toggle on to stop charger script (Settings > Devices & Services > Helpers > Create helper > Toggle).
+        Create toggle helper.
+        Toggle on to stop charger script.
         Delayed by "Wait main power net update" value.
           * The default is off if not defined.
       default: boolean.user_custom
@@ -219,26 +237,27 @@ blueprint:
           domain: input_boolean
 
     #####################################
-    # Car daily charge limit
+    # Daily charge limit
     #####################################
-    toggle_set_daily_car_charge_limit:
-      name: Set daily car charge limit toggle
+    toggle_set_daily_charge_limit:
+      name: Set daily charge limit toggle
       description: >
-        Set car charge limit configured for the day once on start up (Settings > Devices & Services > Helpers > Create helper > Toggle).
+        Create toggle helper.
+        Toggle on to set charge limit configured for the day once on start up.
         If toggled off, the existing car charge limit will be used.
 
 
-        Note: Requires car battery level sensor for this to work. Please toggle off this option if car battery level sensor is not available.
+        Note: Requires battery level sensor for this to work. Please toggle off this option if battery level sensor is not available.
           * The default is off if not defined.
       default: boolean.user_custom
       selector:
         entity:
           domain: input_boolean
 
-    car_charge_limit_monday:
-      name: Monday
+    charge_limit_monday:
+      name: Monday charge limit
       description: >
-        Car charge limit for day (valid range: 50 - 100).
+        Create number helper to set charge limit for day (valid range: 50 - 100).
           * The default is 60% if not defined.
       default: number.user_custom
       selector:
@@ -246,10 +265,22 @@ blueprint:
           domain:
             - input_number
 
-    car_charge_limit_tuesday:
-      name: Tuesday
+    charge_completion_time_monday:
+      name: Monday charge completion time
       description: >
-        Car charge limit for day (valid range: 50 - 100).
+        Create date and time helper to set charge completion time for day (valid range: 00:01 - 23:59).
+        Set to 00:00 to indicate no completion time.
+          * The default is 00:00 if not defined.
+      default: datetime.user_custom
+      selector:
+        entity:
+          domain:
+            - input_datetime
+
+    charge_limit_tuesday:
+      name: Tuesday charge limit
+      description: >
+        Create number helper to set charge limit for day (valid range: 50 - 100).
           * The default is 60% if not defined.
       default: number.user_custom
       selector:
@@ -257,10 +288,22 @@ blueprint:
           domain:
             - input_number
 
-    car_charge_limit_wednesday:
-      name: Wednesday
+    charge_completion_time_tuesday:
+      name: Tuesday charge completion time
       description: >
-        Car charge limit for day (valid range: 50 - 100).
+        Create date and time helper to set charge completion time for day (valid range: 00:01 - 23:59).
+        Set to 00:00 to indicate no completion time.
+          * The default is 00:00 if not defined.
+      default: datetime.user_custom
+      selector:
+        entity:
+          domain:
+            - input_datetime
+
+    charge_limit_wednesday:
+      name: Wednesday charge limit
+      description: >
+        Create number helper to set charge limit for day (valid range: 50 - 100).
           * The default is 60% if not defined.
       default: number.user_custom
       selector:
@@ -268,10 +311,22 @@ blueprint:
           domain:
             - input_number
 
-    car_charge_limit_thursday:
-      name: Thursday
+    charge_completion_time_wednesday:
+      name: Wednesday charge completion time
       description: >
-        Car charge limit for day (valid range: 50 - 100).
+        Create date and time helper to set charge completion time for day (valid range: 00:01 - 23:59).
+        Set to 00:00 to indicate no completion time.
+          * The default is 00:00 if not defined.
+      default: datetime.user_custom
+      selector:
+        entity:
+          domain:
+            - input_datetime
+
+    charge_limit_thursday:
+      name: Thursday charge limit
+      description: >
+        Create number helper to set charge limit for day (valid range: 50 - 100).
           * The default is 60% if not defined.
       default: number.user_custom
       selector:
@@ -279,10 +334,22 @@ blueprint:
           domain:
             - input_number
 
-    car_charge_limit_friday:
-      name: Friday
+    charge_completion_time_thursday:
+      name: Thursday charge completion time
       description: >
-        Car charge limit for day (valid range: 50 - 100).
+        Create date and time helper to set charge completion time for day (valid range: 00:01 - 23:59).
+        Set to 00:00 to indicate no completion time.
+          * The default is 00:00 if not defined.
+      default: datetime.user_custom
+      selector:
+        entity:
+          domain:
+            - input_datetime
+
+    charge_limit_friday:
+      name: Friday charge limit
+      description: >
+        Create number helper to set charge limit for day (valid range: 50 - 100).
           * The default is 70% if not defined.
       default: number.user_custom
       selector:
@@ -290,10 +357,22 @@ blueprint:
           domain:
             - input_number
 
-    car_charge_limit_saturday:
-      name: Saturday
+    charge_completion_time_friday:
+      name: Friday charge completion time
       description: >
-        Car charge limit for day (valid range: 50 - 100).
+        Create date and time helper to set charge completion time for day (valid range: 00:01 - 23:59).
+        Set to 00:00 to indicate no completion time.
+          * The default is 00:00 if not defined.
+      default: datetime.user_custom
+      selector:
+        entity:
+          domain:
+            - input_datetime
+
+    charge_limit_saturday:
+      name: Saturday charge limit
+      description: >
+        Create number helper to set charge limit for day (valid range: 50 - 100).
           * The default is 70% if not defined.
       default: number.user_custom
       selector:
@@ -301,25 +380,50 @@ blueprint:
           domain:
             - input_number
 
-    car_charge_limit_sunday:
-      name: Sunday
+    charge_completion_time_saturday:
+      name: Saturday charge completion time
       description: >
-        Car charge limit for day (valid range: 50 - 100).
+        Create date and time helper to set charge completion time for day (valid range: 00:01 - 23:59).
+        Set to 00:00 to indicate no completion time.
+          * The default is 00:00 if not defined.
+      default: datetime.user_custom
+      selector:
+        entity:
+          domain:
+            - input_datetime
+
+    charge_limit_sunday:
+      name: Sunday charge limit
+      description: >
+        Create number helper to set charge limit for day (valid range: 50 - 100).
           * The default is 60% if not defined.
       default: number.user_custom
       selector:
         entity:
           domain:
             - input_number
+
+    charge_completion_time_sunday:
+      name: Sunday charge completion time
+      description: >
+        Create date and time helper to set charge completion time for day (valid range: 00:01 - 23:59).
+        Set to 00:00 to indicate no completion time.
+          * The default is 00:00 if not defined.
+      default: datetime.user_custom
+      selector:
+        entity:
+          domain:
+            - input_datetime
 
     #####################################
     # Weather forecast
     #####################################
-    charge_car_based_on_weather:
-      name: Adjust daily car charge limit based on weather
+    adjust_charge_limit_based_on_weather:
+      name: Adjust daily charge limit based on weather
       description: >
-        Automatically adjust to the highest charge limit set within a rainy forecast period.
-        Daily car charge limit and weather provider settings must be configured.
+        Create toggle helper.
+        Toggle on to automatically adjust to the highest charge limit set within a rainy forecast period.
+        Daily charge limit and weather provider settings must be configured.
           * The default is off if not defined.
       default: boolean.user_custom
       selector:
@@ -359,10 +463,10 @@ blueprint:
       selector:
         text:
 
-    car_charge_limit_on_bad_weather:
-      name: Car charge limit on bad weather forecast
+    charge_limit_on_bad_weather:
+      name: Charge limit on bad weather forecast
       description: >
-        Car charge limit to set on bad weather forecast (valid range: 50 - 100).
+        Charge limit to set on bad weather forecast (valid range: 50 - 100).
         This will be used unless there is a higher setting within the forecast period.
           * Default:  70
       default: 70
@@ -452,10 +556,10 @@ blueprint:
     #####################################
     # Basic common control entities
     #####################################
-    car_sensor_charger_pluggedin:
+    charger_plugged_in_sensor:
       name: Charger plugged in sensor
       description: >
-        Sensor to check if car is plugged in.
+        Sensor to check if charger is connected.
         States are defined in "Charger connect trigger list" and "Charger connected state list".
         Config is automatically defined for the selected API unless it is marked as ***Not defined***.
           * Tesla Custom: binary_sensor.[CarName_]charger
@@ -500,7 +604,7 @@ blueprint:
       selector:
         text:
 
-    car_switch_charger:
+    charger_on_off_switch:
       name: Charger on/off switch
       description: >
         Switch to turn charger on or off.
@@ -515,10 +619,10 @@ blueprint:
         entity:
           domain: switch
 
-    car_sensor_charging:
+    charger_charging_sensor:
       name: Charger charging sensor
       description: >
-        Sensor to check if car is charging.
+        Sensor to check if charger is charging.
         States are defined in "Charger charging state list".
         Config is automatically defined for the selected API unless it is marked as ***Not defined***.
           * Tesla Custom: binary_sensor.[CarName_]charging
@@ -548,10 +652,10 @@ blueprint:
       selector:
         text:
 
-    car_number_charging_amps:
+    charger_charging_amps:
       name: Charger current
       description: >
-        Entity to control current in Ampere used to charge the car battery.
+        Entity to control current in Ampere used to charge the battery.
         Config is automatically defined for the selected API unless it is marked as ***Not defined***.
           * Tesla Custom: number.[CarName_]charging_amps
           * Tesla Fleet:  number.[CarName_]charge_current
@@ -720,10 +824,12 @@ trigger_variables:
   # OCPP uses single sensor to indicate plugged in and charging
   # Use 'Available' state for trigger testing with IAMMeter. Just need to turn on then off OCPP "Charge Control" to trigger the automation.
   # rc_ocpp_connect_trigger: "{{ ['Available', 'Preparing'] }}"
+  # Add 'Available' to rc_ocpp_charger_connected for normal testing, and switch off charger to exit automation.
+  # rc_ocpp_charger_connected: "{{ rc_ocpp_connect_trigger + rc_ocpp_charging_state + rc_ocpp_charger_done + ['Available'] }}"
   rc_ocpp_connect_trigger: "{{ ['Preparing'] }}"
   rc_ocpp_charging_state: "{{ ['Charging', 'SuspendedEV', 'SuspendedEVSE'] }}"
   rc_ocpp_charger_done: "{{ ['Finishing'] }}"
-  rc_ocpp_charger_connected: "{{ rc_ocpp_connect_trigger + rc_ocpp_charging_state + rc_ocpp_charger_done }}"
+  rc_ocpp_charger_connected: "{{ rc_ocpp_connect_trigger + rc_ocpp_charging_state + rc_ocpp_charger_done + ['Available'] }}"
 
   #####################################
   # Charge control API
@@ -752,13 +858,13 @@ trigger_variables:
   k_ev_wake_up: "k_ev_wake_up"
   k_ev_status_update: "k_ev_status_update"
 
-  i_chargerConnectState: !input car_sensor_charger_pluggedin
+  i_chargerConnectState: !input charger_plugged_in_sensor
   i_chargerConnectTriggerList: !input charger_connect_trigger_list
   i_chargerConnectedStateList: !input charger_connected_state_list
-  i_chargerSwitch: !input car_switch_charger
-  i_chargerChargeState: !input car_sensor_charging
+  i_chargerSwitch: !input charger_on_off_switch
+  i_chargerChargeState: !input charger_charging_sensor
   i_chargerChargingStateList: !input charger_charging_state_list
-  i_chargerAmp: !input car_number_charging_amps
+  i_chargerAmp: !input charger_charging_amps
   i_evBatteryLevel: !input car_sensor_battery
   i_evChargeLimit: !input car_number_charge_limit
   i_evHomeState: !input car_location_tracker
@@ -881,6 +987,10 @@ triggers:
     attribute: elevation
     above: !input sunrise_elevation_start_trigger
 
+  # Trigger action to meet oneoff charge schedule.
+  - trigger: time
+    at: !input next_charge_time_trigger
+
 conditions:
   # Car must be at location. OCPP charger will know when it is plugged in at location.
   - condition: template
@@ -931,6 +1041,14 @@ variables:
   charge_limit_min: 50
   charge_limit_max: 100
   charge_limit_default: 60
+  charge_completion_time_default: '00:00:00'
+
+  # Used to estimate charge completion time
+  maxChargeRateHourPerPercent: 0.17
+  # Sunrise is defined as the instant when the upper limb of the sun's disk is just touching the horizon, which corresponds to a solar altitude of -0.833 degrees.
+  # For Sydney on 28/4/2025, sunrise at 6:28am, 6 degree elevation at 07:01:43am, (07:01:43 - 6:28:00) / (0.833 + 6) = 296.063 seconds/degree
+  secondsPerDegreeSunrise: 296.063
+  centreOfSunDegreeBelowHorizonAtSunrise: 0.833
 
   #####################################
   # Inputs
@@ -968,6 +1086,7 @@ variables:
   
   sunriseElevationStartTrigger: !input sunrise_elevation_start_trigger
   sunsetElevationEndTrigger: !input sunset_elevation_end_trigger
+  e_nextChargeTimeTrigger: !input next_charge_time_trigger
 
   #####################################
   # e_ => External entities
@@ -986,40 +1105,69 @@ variables:
   #####################################
   # Set car charge limit based on which week day
   #####################################
-  i_setDailyCarChargeLimit: !input toggle_set_daily_car_charge_limit
-  setDailyCarChargeLimit: "{% if has_value(i_setDailyCarChargeLimit) %}{{ states(i_setDailyCarChargeLimit) }}{% else %}{{ 'off' }}{% endif %}"
+  i_setDailyChargeLimit: !input toggle_set_daily_charge_limit
+  setDailyChargeLimit: "{% if has_value(i_setDailyChargeLimit) %}{{ states(i_setDailyChargeLimit) }}{% else %}{{ 'off' }}{% endif %}"
 
-  i_chargeLimitMon: !input car_charge_limit_monday
-  i_chargeLimitTue: !input car_charge_limit_tuesday
-  i_chargeLimitWed: !input car_charge_limit_wednesday
-  i_chargeLimitThu: !input car_charge_limit_thursday
-  i_chargeLimitFri: !input car_charge_limit_friday
-  i_chargeLimitSat: !input car_charge_limit_saturday
-  i_chargeLimitSun: !input car_charge_limit_sunday
-  
-  # Use separate automation to save defaults and restore defaults.
-  chargeLimitMon: "{% if has_value(i_chargeLimitMon) %}{{ states(i_chargeLimitMon) | int }}{% else %}{{ charge_limit_default }}{% endif %}"
-  chargeLimitTue: "{% if has_value(i_chargeLimitTue) %}{{ states(i_chargeLimitTue) | int }}{% else %}{{ charge_limit_default }}{% endif %}"
-  chargeLimitWed: "{% if has_value(i_chargeLimitWed) %}{{ states(i_chargeLimitWed) | int }}{% else %}{{ charge_limit_default }}{% endif %}"
-  chargeLimitThu: "{% if has_value(i_chargeLimitThu) %}{{ states(i_chargeLimitThu) | int }}{% else %}{{ charge_limit_default }}{% endif %}"
-  chargeLimitFri: "{% if has_value(i_chargeLimitFri) %}{{ states(i_chargeLimitFri) | int }}{% else %}{{ charge_limit_default + 10 }}{% endif %}"
-  chargeLimitSat: "{% if has_value(i_chargeLimitSat) %}{{ states(i_chargeLimitSat) | int }}{% else %}{{ charge_limit_default + 10 }}{% endif %}"
-  chargeLimitSun: "{% if has_value(i_chargeLimitSun) %}{{ states(i_chargeLimitSun) | int }}{% else %}{{ charge_limit_default }}{% endif %}"
+  i_chargeLimitMon: !input charge_limit_monday
+  i_chargeLimitTue: !input charge_limit_tuesday
+  i_chargeLimitWed: !input charge_limit_wednesday
+  i_chargeLimitThu: !input charge_limit_thursday
+  i_chargeLimitFri: !input charge_limit_friday
+  i_chargeLimitSat: !input charge_limit_saturday
+  i_chargeLimitSun: !input charge_limit_sunday
 
-  # Store as integer list
-  carChargeLimitList: "{{ [chargeLimitMon, chargeLimitTue, chargeLimitWed, chargeLimitThu, chargeLimitFri, chargeLimitSat, chargeLimitSun] }}"
+  i_chargeCompletionTimeMon: !input charge_completion_time_monday
+  i_chargeCompletionTimeTue: !input charge_completion_time_tuesday
+  i_chargeCompletionTimeWed: !input charge_completion_time_wednesday
+  i_chargeCompletionTimeThu: !input charge_completion_time_thursday
+  i_chargeCompletionTimeFri: !input charge_completion_time_friday
+  i_chargeCompletionTimeSat: !input charge_completion_time_saturday
+  i_chargeCompletionTimeSun: !input charge_completion_time_sunday
+
   todayIndex: "{{ now().weekday() }}"
+  tomorrowIndex: "{{ ( now().weekday() + 1 ) % 7 }}"
+
+  k_chargeLimit: "k_chargeLimit"
+  k_chargeCompletionTime: "k_chargeCompletionTime"
+
+  # Use separate automation to restore defaults.
+  chargeLimitMon:
+    k_chargeLimit: "{% if has_value(i_chargeLimitMon) %}{{ states(i_chargeLimitMon) | int }}{% else %}{{ charge_limit_default }}{% endif %}"
+    k_chargeCompletionTime: "{% if has_value(i_chargeCompletionTimeMon) %}{{ states(i_chargeCompletionTimeMon) }}{% else %}{{ charge_completion_time_default }}{% endif %}"
+  chargeLimitTue:
+    k_chargeLimit: "{% if has_value(i_chargeLimitTue) %}{{ states(i_chargeLimitTue) | int }}{% else %}{{ charge_limit_default }}{% endif %}"
+    k_chargeCompletionTime: "{% if has_value(i_chargeCompletionTimeTue) %}{{ states(i_chargeCompletionTimeTue) }}{% else %}{{ charge_completion_time_default }}{% endif %}"
+  chargeLimitWed:
+    k_chargeLimit: "{% if has_value(i_chargeLimitWed) %}{{ states(i_chargeLimitWed) | int }}{% else %}{{ charge_limit_default }}{% endif %}"
+    k_chargeCompletionTime: "{% if has_value(i_chargeCompletionTimeWed) %}{{ states(i_chargeCompletionTimeWed) }}{% else %}{{ charge_completion_time_default }}{% endif %}"
+  chargeLimitThu:
+    k_chargeLimit: "{% if has_value(i_chargeLimitThu) %}{{ states(i_chargeLimitThu) | int }}{% else %}{{ charge_limit_default }}{% endif %}"
+    k_chargeCompletionTime: "{% if has_value(i_chargeCompletionTimeThu) %}{{ states(i_chargeCompletionTimeThu) }}{% else %}{{ charge_completion_time_default }}{% endif %}"
+  chargeLimitFri:
+    k_chargeLimit: "{% if has_value(i_chargeLimitFri) %}{{ states(i_chargeLimitFri) | int }}{% else %}{{ charge_limit_default + 10 }}{% endif %}"
+    k_chargeCompletionTime: "{% if has_value(i_chargeCompletionTimeFri) %}{{ states(i_chargeCompletionTimeFri) }}{% else %}{{ charge_completion_time_default }}{% endif %}"
+  chargeLimitSat:
+    k_chargeLimit: "{% if has_value(i_chargeLimitSat) %}{{ states(i_chargeLimitSat) | int }}{% else %}{{ charge_limit_default + 10 }}{% endif %}"
+    k_chargeCompletionTime: "{% if has_value(i_chargeCompletionTimeSat) %}{{ states(i_chargeCompletionTimeSat) }}{% else %}{{ charge_completion_time_default }}{% endif %}"
+  chargeLimitSun:
+    k_chargeLimit: "{% if has_value(i_chargeLimitSun) %}{{ states(i_chargeLimitSun) | int }}{% else %}{{ charge_limit_default }}{% endif %}"
+    k_chargeCompletionTime: "{% if has_value(i_chargeCompletionTimeSun) %}{{ states(i_chargeCompletionTimeSun) }}{% else %}{{ charge_completion_time_default }}{% endif %}"
+
+  # List of charge limit configs
+  chargeLimitList: "{{ [chargeLimitMon, chargeLimitTue, chargeLimitWed, chargeLimitThu, chargeLimitFri, chargeLimitSat, chargeLimitSun] }}"
+  triggerEntityId: "{{ trigger.entity_id }}"
+  isSelfTriggered: "{{ triggerEntityId == e_nextChargeTimeTrigger }}"
 
   #####################################
   # Set car charge limit based on weather forecast
   #####################################
-  i_chargeCarBasedOnWeather: !input charge_car_based_on_weather
-  chargeCarBasedOnWeather: "{% if has_value(i_chargeCarBasedOnWeather) %}{{ states(i_chargeCarBasedOnWeather) }}{% else %}{{ 'off' }}{% endif %}"
+  i_adjustChargeLimitBasedOnWeather: !input adjust_charge_limit_based_on_weather
+  adjustChargeLimitBasedOnWeather: "{% if has_value(i_adjustChargeLimitBasedOnWeather) %}{{ states(i_adjustChargeLimitBasedOnWeather) }}{% else %}{{ 'off' }}{% endif %}"
 
   e_weatherProvider: !input weather_provider
   forecastIndex: !input forecast_index
   forecastAttribute: !input forecast_attribute
-  carChargeLimitOnBadWeather: !input car_charge_limit_on_bad_weather
+  chargeLimitOnBadWeather: !input charge_limit_on_bad_weather
 
   # Not all intervals are available for all providers. Possible values: "hourly", "twice_daily", "daily"
   forecastInterval: "daily"
@@ -1033,7 +1181,6 @@ actions:
   # Global action variables
   #####################################
   - variables:
-
       useTeslaCustomApi: "{{ chargeApiKey == k_tesla_custom_api }}"
       useTeslaFleetApi: "{{ chargeApiKey == k_tesla_fleet_api }}"
       useBleMqttApi: "{{ chargeApiKey == k_tesla_blemqtt_api }}"
@@ -1054,12 +1201,57 @@ actions:
       e_evWakeUp: "{{ chargeApi[k_ev_wake_up] }}"
       e_evForceUpdateHa: "{{ chargeApi[k_ev_status_update] }}"
 
+      isDaytime: >
+        {% if (is_state_attr('sun.sun', 'rising', true) and state_attr('sun.sun', 'elevation') > sunriseElevationStartTrigger)
+        or (is_state_attr('sun.sun', 'rising', false) and state_attr('sun.sun', 'elevation') > sunsetElevationEndTrigger) %}
+          {{ true }}
+        {% else %}
+          {{ false }}
+        {% endif %}
+
+      # chargeLimitConfig: >
+      #   {% if isSelfTriggered %}
+      #     {% if isDaytime %}
+      #       {{ chargeLimitList[todayIndex] }}
+      #     {% else %}
+      #       {{ chargeLimitList[tomorrowIndex] }}
+      #     {% endif %}
+      #   {% else %}
+      #     {{ chargeLimitList[todayIndex] }}
+      #   {% endif %}
+
+      chargeLimitConfig: >
+        {% if isDaytime %}
+          {{ chargeLimitList[todayIndex] }}
+        {% else %}
+          {{ chargeLimitList[tomorrowIndex] }}
+        {% endif %}
+
+      # Calculate charge end time
+      hasChargeEndTime: >
+        {% if setDailyChargeLimit == 'on' %}
+          {{ chargeLimitConfig[k_chargeCompletionTime] != charge_completion_time_default }}
+        {% else %}
+          {{ false }}
+        {% endif %}
+
+      chargeEndTime: >
+        {% if isDaytime %}
+          {{ today_at(chargeLimitConfig[k_chargeCompletionTime]) }}
+        {% else %}
+          {{ today_at(chargeLimitConfig[k_chargeCompletionTime]) + timedelta(days = 1) }}
+        {% endif %}
+
       debug_chargeLimitConfig: |
-        setDailyCarChargeLimit={{ setDailyCarChargeLimit }}
-        todayIndex={{ todayIndex }}
-        carChargeLimitList={{ carChargeLimitList }}
-        chargeCarBasedOnWeather={{ chargeCarBasedOnWeather }}
-        carChargeLimitOnBadWeather={{ carChargeLimitOnBadWeather }}
+        myName = {{ this.entity_id }}
+        triggerEntityId = {{ triggerEntityId }}
+        isSelfTriggered = {{ isSelfTriggered }}
+        setDailyChargeLimit = {{ setDailyChargeLimit }}
+        chargeLimitList = {{ chargeLimitList }}
+        todayIndex = {{ todayIndex }}
+        tomorrowIndex = {{ tomorrowIndex }}
+        adjustChargeLimitBasedOnWeather = {{ adjustChargeLimitBasedOnWeather }}
+        chargeLimitOnBadWeather = {{ chargeLimitOnBadWeather }}
 
   #####################################
   # Init car
@@ -1106,16 +1298,16 @@ actions:
   # If charge car based on weather is enabled, daily car charge limit and weather provider settings must be configured.
   - choose:
     - conditions:
-        - alias: "If set daily car charge limit on start up"
+        - alias: "If set daily charge limit on start up"
           condition: template
-          value_template: "{{ setDailyCarChargeLimit == 'on' }}"
+          value_template: "{{ setDailyChargeLimit == 'on' }}"
 
       # Then set charge limit base on config
       sequence:
         - if:
-            - alias: "If charge car based on weather"
+            - alias: "If adjust charge limit based on weather"
               condition: template
-              value_template: "{{ chargeCarBasedOnWeather == 'on' }}"
+              value_template: "{{ adjustChargeLimitBasedOnWeather == 'on' }}"
           then:
             - alias: "Then get weather forecast data"
               action: weather.get_forecasts
@@ -1129,7 +1321,7 @@ actions:
             # Period forecast list excluding today
             periodForecastList: >
               {% set data = namespace(strings=[]) %}
-              {% if chargeCarBasedOnWeather == 'on' %}
+              {% if adjustChargeLimitBasedOnWeather == 'on' %}
                 {% for day in range(1, forecastIndex + 1, 1) %}
                   {% set data.strings = data.strings + [weather_forecast[e_weatherProvider]['forecast'][day][forecastAttribute]] %}
                 {% endfor %}
@@ -1137,34 +1329,35 @@ actions:
               {{ data.strings }}
 
             weatherToday: >
-              {% if chargeCarBasedOnWeather == 'on' %}
+              {% if adjustChargeLimitBasedOnWeather == 'on' %}
                 {{ weather_forecast[e_weatherProvider]['forecast'][0][forecastAttribute] }}
               {% else %}
                 {{ "weather forecast disabled" }}
               {% endif %}
 
-            # Charge limit list for the next N days excluding today. Also take into account carChargeLimitOnBadWeather.
+            # Charge limit list for the next N days excluding today. Also take into account chargeLimitOnBadWeather.
             badWeatherPeriodChargeLimitList: >
-              {% set data = namespace(numbers=[carChargeLimitOnBadWeather]) %}
+              {% set data = namespace(numbers=[chargeLimitOnBadWeather]) %}
               {% for i in range(1, forecastIndex + 1, 1) %}
                 {% set day = (todayIndex + i) % 7 %}
-                {% set data.numbers = data.numbers + [carChargeLimitList[day]] %}
+                {% set data.numbers = data.numbers + [chargeLimitList[day][k_chargeLimit]] %}
               {% endfor %}
               {{ data.numbers }}
 
             badWeatherPeriodMaxChargeLimit: "{{ badWeatherPeriodChargeLimitList | max }}"
 
-            todayCarChargeLimit: "{{ carChargeLimitList[todayIndex] }}"
+            #todayChargeLimit: "{{ chargeLimitList[todayIndex][k_chargeLimit] }}"
+            todayChargeLimit: "{{ chargeLimitConfig[k_chargeLimit] }}"
 
             # See https://www.home-assistant.io/integrations/weather/
             # Some possible values: rainy, cloudy, partlycloudy, clear-night
-            finalCarChargeLimit: >
-              {% if chargeCarBasedOnWeather == 'on'
+            finalChargeLimit: >
+              {% if adjustChargeLimitBasedOnWeather == 'on'
               and 'rainy' in periodForecastList
-              and badWeatherPeriodMaxChargeLimit > todayCarChargeLimit %}
+              and badWeatherPeriodMaxChargeLimit > todayChargeLimit %}
                 {{ badWeatherPeriodMaxChargeLimit }}
               {% else %}
-                {{ todayCarChargeLimit }} 
+                {{ todayChargeLimit }} 
               {% endif %}
 
         # Show current status
@@ -1172,9 +1365,9 @@ actions:
         #   data_template:
         #     message: |-
         #       {{now()}}: 
-        #       finalCarChargeLimit={{finalCarChargeLimit}}, todayCarChargeLimit={{todayCarChargeLimit}}, carChargeLimitOnBadWeather={{carChargeLimitOnBadWeather}},
+        #       finalChargeLimit={{finalChargeLimit}}, todayChargeLimit={{todayChargeLimit}}, chargeLimitOnBadWeather={{chargeLimitOnBadWeather}},
         #       badWeatherPeriodMaxChargeLimit={{badWeatherPeriodMaxChargeLimit}}, badWeatherPeriodChargeLimitList={{badWeatherPeriodChargeLimitList}}, periodForecastList={{periodForecastList}},
-        #       todayIndex={{todayIndex}}, carChargeLimitList={{carChargeLimitList}}, weatherToday={{weatherToday}}
+        #       todayIndex={{todayIndex}}, chargeLimitList={{chargeLimitList}}, weatherToday={{weatherToday}}
         #     #level: warning
         #     level: info
 
@@ -1187,7 +1380,7 @@ actions:
           then:
             - action: "{{ states[e_evChargeLimit]['domain'] }}.set_value"
               data:
-                value: "{{ finalCarChargeLimit }}"
+                value: "{{ finalChargeLimit }}"
               target:
                 entity_id: "{{ e_evChargeLimit }}"
             - delay: "{{ wait_charge_limit }}"
@@ -1213,15 +1406,15 @@ actions:
   #####################################
   - variables:
       debug_states: |
-        e_stopCharger={% if has_value(e_stopCharger) %}{{ states(e_stopCharger) }}{% else %}{{ 'Not defined' }}{% endif %}
-        e_useSecondaryPowerSource={% if has_value(e_useSecondaryPowerSource) %}{{ states(e_useSecondaryPowerSource) }}{% else %}{{ 'Not defined' }}{% endif %}
-        e_sunElevation={{ state_attr('sun.sun', 'elevation') }}
-        e_evHomeState={% if has_value(e_evHomeState) %}{{ states(e_evHomeState) }}{% else %}{{ 'Not defined' }}{% endif %}
-        e_chargerConnectState={{ states(e_chargerConnectState) }}
-        e_chargerSwitch={{ states(e_chargerSwitch) }}
-        e_chargerChargeState={{ states(e_chargerChargeState) }}
-        e_evBatteryLevel={% if has_value(e_evBatteryLevel) %}{{ states(e_evBatteryLevel) }}{% else %}{{ 'Not defined' }}{% endif %}
-        e_evChargeLimit={% if has_value(e_evChargeLimit) %}{{ states(e_evChargeLimit) }}{% else %}{{ 'Not defined' }}{% endif %}
+        e_stopCharger = {% if has_value(e_stopCharger) %}{{ states(e_stopCharger) }}{% else %}{{ 'Not defined' }}{% endif %}
+        e_useSecondaryPowerSource = {% if has_value(e_useSecondaryPowerSource) %}{{ states(e_useSecondaryPowerSource) }}{% else %}{{ 'Not defined' }}{% endif %}
+        e_sunElevation = {{ state_attr('sun.sun', 'elevation') }}
+        e_evHomeState = {% if has_value(e_evHomeState) %}{{ states(e_evHomeState) }}{% else %}{{ 'Not defined' }}{% endif %}
+        e_chargerConnectState = {{ states(e_chargerConnectState) }}
+        e_chargerSwitch = {{ states(e_chargerSwitch) }}
+        e_chargerChargeState = {{ states(e_chargerChargeState) }}
+        e_evBatteryLevel = {% if has_value(e_evBatteryLevel) %}{{ states(e_evBatteryLevel) }}{% else %}{{ 'Not defined' }}{% endif %}
+        e_evChargeLimit = {% if has_value(e_evChargeLimit) %}{{ states(e_evChargeLimit) }}{% else %}{{ 'Not defined' }}{% endif %}
 
   - repeat:
       #####################################
@@ -1248,7 +1441,7 @@ actions:
             # dictionary value @ data['actions'][5]['repeat']['while'][0]['conditions'][1]['entity_id']. Got '{{ e_chargerConnectState }}'
             # - alias: "Continue if charger is plugged in"
             #   condition: state
-            #   entity_id: !input car_sensor_charger_pluggedin
+            #   entity_id: !input charger_plugged_in_sensor
             #   # entity_id: "{{ e_chargerConnectState }}"
             #   state:
             #     - "on"
@@ -1280,8 +1473,16 @@ actions:
                   {{ true }}
                 {% endif %}
 
+            - alias: "Continue if looping for the first time or charger is charging "
+              condition: template
+              value_template: "{{ repeat.index == 1 or states(e_chargerChargeState) in rc_chargerChargingStateList }}"
+
             - condition: or
               conditions:
+
+                - alias: "Continue if automation is self-triggered"
+                  condition: template
+                  value_template: "{{ isSelfTriggered }}"
 
                 - alias: "Continue if using secondary power source"
                   condition: template
@@ -1298,9 +1499,22 @@ actions:
         # Calculate new charging current
         #####################################
         - variables:
+            setDailyChargeLimit: "{% if has_value(i_setDailyChargeLimit) %}{{ states(i_setDailyChargeLimit) }}{% else %}{{ 'off' }}{% endif %}"
+            nowTime: "{{ now() }}"
+
+            availableChargeDuration: "{{ chargeEndTime | as_timestamp - nowTime | as_timestamp }}"
+            needChargeDuration: >
+              {% if has_value(e_evBatteryLevel) and has_value(e_evChargeLimit) %}
+                {{ (states(e_evChargeLimit) | int - states(e_evBatteryLevel) | int) * maxChargeRateHourPerPercent * 60 * 60 }}
+              {% else %}
+                {{ 100 * maxChargeRateHourPerPercent * 60 * 60 }}
+              {% endif %}
+
             # Minimum charge current
             chargerMinCurrent: >
-              {% if has_value(e_chargerMinCurrent) %}
+              {% if hasChargeEndTime and chargeEndTime > nowTime and needChargeDuration >= availableChargeDuration %}
+                {{ chargerMaxCurrent }}
+              {% elif has_value(e_chargerMinCurrent) %}
                 {% set minCurrent = states(e_chargerMinCurrent) | int %}
                 {% if minCurrent < 0 %}
                   {{ 0 }}
@@ -1365,15 +1579,6 @@ actions:
                 {{ newCurrent }}
               {% endif %}
 
-            # Not used
-            #isDaytime: >
-            #  {% if (is_state_attr('sun.sun', 'rising', true) and state_attr('sun.sun', 'elevation') > sunriseElevationStartTrigger)
-            #  or (is_state_attr('sun.sun', 'rising', false) and state_attr('sun.sun', 'elevation') > sunsetElevationEndTrigger) %}
-            #    {{ true }}
-            #  {% else %}
-            #    {{ false }}
-            #  {% endif %}
-
         - choose:
           #####################################
           # Turn on charger if looping for the first time
@@ -1437,36 +1642,107 @@ actions:
               - delay: "{{ wait_current_change }}"
 
           #####################################
+          # Charging stopped due to charge completion or car unplugged.
+          #####################################
+          # - conditions:
+          #     - alias: "Check next end time if charging has stopped"
+          #       condition: template
+          #       value_template: "{{ not states(e_chargerChargeState) in rc_chargerChargingStateList }}"
+          #   sequence:
+          #     - alias: "Always turn off charger just in case if charging status issue, eg. not up-to-date"
+          #       action: switch.turn_off
+          #       data: {}
+          #       target:
+          #         entity_id: "{{ e_chargerSwitch }}"
+          #     - delay: "{{ wait_charger_off }}"
+          #     - if:
+          #         - condition: template
+          #           value_template: "{{ has_value(e_evForceUpdateHa) }}"
+          #       then:
+          #         - alias: "Get the latest data from Tesla to update HA before exiting script"
+          #           action: "{{ states[e_evForceUpdateHa]['domain'] }}.press"
+          #           data: {}
+          #           target:
+          #             entity_id: "{{ e_evForceUpdateHa }}"
+          #     - delay: "{{ waitApiUpdateHa }}"
+
+          #     - variables:
+          #         nowTime: "{{ now() }}"
+          #         # Tomorrow has charge end time ?
+          #         tomorrowIdx: "{{ ( now().weekday() + 1 ) % 7 }}"
+          #         tomorrowHasChargeEndTime: >
+          #           {% if setDailyChargeLimit == 'on' %}
+          #             {{ chargeLimitList[tomorrowIdx][k_chargeCompletionTime] != charge_completion_time_default }}
+          #           {% else %}
+          #             {{ false }}
+          #           {% endif %}
+          #         # Calculate tomorrow charge end time
+          #         tomorrowChargeEndTime: "{{ today_at('00:00:00') + timedelta(hours = 24) + as_timedelta(chargeLimitList[tomorrowIdx][k_chargeCompletionTime]) }}"
+          #         tomorrowChargeStartTime: "{{ (state_attr('sun.sun', 'next_rising') | as_datetime + timedelta(seconds = (centreOfSunDegreeBelowHorizonAtSunrise + sunriseElevationStartTrigger) * secondsPerDegreeSunrise)) | as_timestamp | timestamp_local }}"
+          #         tomorrowAvailableChargeDuration: "{{ tomorrowChargeEndTime | as_timestamp - tomorrowChargeStartTime | as_timestamp }}"
+          #         tomorrowNeedChargeDuration: >
+          #           {% if has_value(e_evBatteryLevel) and has_value(e_evChargeLimit) %}
+          #             {{ (states(e_evChargeLimit) | int - states(e_evBatteryLevel) | int) * maxChargeRateHourPerPercent * 60 * 60 }}
+          #           {% else %}
+          #             {{ 100 * maxChargeRateHourPerPercent * 60 * 60 }}
+          #           {% endif %}
+          #         tomorrowProposeChargeStartTime: "{{ tomorrowChargeEndTime | as_datetime - timedelta(seconds = tomorrowNeedChargeDuration) }}"
+          #         tomorrowNewChargeStartTime: >
+          #           {% if tomorrowProposeChargeStartTime <= nowTime %}
+          #             {{ nowTime | as_datetime + timedelta(minutes = 2) }}
+          #           {% else %}
+          #             {{ tomorrowProposeChargeStartTime }}
+          #           {% endif %}
+
+          #     - alias: "Set trigger time if need to meet next charge completion time"
+          #       if:
+          #         - condition: template
+          #           value_template: "{{ tomorrowHasChargeEndTime and tomorrowNeedChargeDuration >= tomorrowAvailableChargeDuration }}"
+          #       then:
+          #         - action: input_datetime.set_datetime
+          #           target:
+          #             entity_id: "{{ e_nextChargeTimeTrigger }}"
+          #           data:
+          #             timestamp: "{{ tomorrowNewChargeStartTime | as_timestamp }}"
+
+          #     - stop: |
+          #         Exiting script due to charger turned off manually or automatically by car when charge limit reached.
+          #         If this is unexpected, try increasing wait time for "Wait status update".
+          #     # https://www.home-assistant.io/docs/scripts/#stopping-a-script-sequence
+          #     # Cannot get response_variable to work. Needs to be key/value pair?
+          #     #response_variable: "stop_charging_reason"
+
+          #####################################
           # Exit script if car is not charging
           #####################################
-          - conditions:
-              - alias: "Exit script if car is not charging"
-                condition: template
-                value_template: "{{ not states(e_chargerChargeState) in rc_chargerChargingStateList }}"
-            sequence:
-              - alias: "Always turn off charger just in case if charging status issue, eg. not up-to-date"
-                action: switch.turn_off
-                data: {}
-                target:
-                  entity_id: "{{ e_chargerSwitch }}"
-              - delay: "{{ wait_charger_off }}"
-              - if:
-                  - condition: template
-                    value_template: "{{ has_value(e_evForceUpdateHa) }}"
-                then:
-                  - alias: "Get the latest data from Tesla to update HA before exiting script"
-                    action: "{{ states[e_evForceUpdateHa]['domain'] }}.press"
-                    data: {}
-                    target:
-                      entity_id: "{{ e_evForceUpdateHa }}"
-              # Moved status wait out of if statement to apply wait for all just before exit.
-              - delay: "{{ waitApiUpdateHa }}"
-              - stop: |
-                  Exiting script due to charger turned off manually or automatically by car when charge limit reached.
-                  If this is unexpected, try increasing wait time for "Wait status update".
-              # https://www.home-assistant.io/docs/scripts/#stopping-a-script-sequence
-              # Cannot get response_variable to work. Needs to be key/value pair?
-              #response_variable: "stop_charging_reason"
+          # - conditions:
+          #     - alias: "Exit script if car is not charging"
+          #       condition: template
+          #       value_template: "{{ not states(e_chargerChargeState) in rc_chargerChargingStateList }}"
+          #   sequence:
+          #     - alias: "Always turn off charger just in case if charging status issue, eg. not up-to-date"
+          #       action: switch.turn_off
+          #       data: {}
+          #       target:
+          #         entity_id: "{{ e_chargerSwitch }}"
+          #     - delay: "{{ wait_charger_off }}"
+          #     - if:
+          #         - condition: template
+          #           value_template: "{{ has_value(e_evForceUpdateHa) }}"
+          #       then:
+          #         - alias: "Get the latest data from Tesla to update HA before exiting script"
+          #           action: "{{ states[e_evForceUpdateHa]['domain'] }}.press"
+          #           data: {}
+          #           target:
+          #             entity_id: "{{ e_evForceUpdateHa }}"
+          #     # Moved status wait out of if statement to apply wait for all just before exit.
+          #     - delay: "{{ waitApiUpdateHa }}"
+          #     - stop: |
+          #         Exiting script due to charger turned off manually or automatically by car when charge limit reached.
+          #         If this is unexpected, try increasing wait time for "Wait status update".
+          #     # https://www.home-assistant.io/docs/scripts/#stopping-a-script-sequence
+          #     # Cannot get response_variable to work. Needs to be key/value pair?
+          #     #response_variable: "stop_charging_reason"
 
           #####################################
           # Change charging current if required
@@ -1539,15 +1815,15 @@ actions:
 
         - variables:
             debug_states: |
-              e_stopCharger={% if has_value(e_stopCharger) %}{{ states(e_stopCharger) }}{% else %}{{ 'Not defined' }}{% endif %}
-              e_useSecondaryPowerSource={% if has_value(e_useSecondaryPowerSource) %}{{ states(e_useSecondaryPowerSource) }}{% else %}{{ 'Not defined' }}{% endif %}
-              e_sunElevation={{ state_attr('sun.sun', 'elevation') }}
-              e_evHomeState={% if has_value(e_evHomeState) %}{{ states(e_evHomeState) }}{% else %}{{ 'Not defined' }}{% endif %}
-              e_chargerConnectState={{ states(e_chargerConnectState) }}
-              e_chargerSwitch={{ states(e_chargerSwitch) }}
-              e_chargerChargeState={{ states(e_chargerChargeState) }}
-              e_evBatteryLevel={% if has_value(e_evBatteryLevel) %}{{ states(e_evBatteryLevel) }}{% else %}{{ 'Not defined' }}{% endif %}
-              e_evChargeLimit={% if has_value(e_evChargeLimit) %}{{ states(e_evChargeLimit) }}{% else %}{{ 'Not defined' }}{% endif %}
+              e_stopCharger = {% if has_value(e_stopCharger) %}{{ states(e_stopCharger) }}{% else %}{{ 'Not defined' }}{% endif %}
+              e_useSecondaryPowerSource = {% if has_value(e_useSecondaryPowerSource) %}{{ states(e_useSecondaryPowerSource) }}{% else %}{{ 'Not defined' }}{% endif %}
+              e_sunElevation = {{ state_attr('sun.sun', 'elevation') }}
+              e_evHomeState = {% if has_value(e_evHomeState) %}{{ states(e_evHomeState) }}{% else %}{{ 'Not defined' }}{% endif %}
+              e_chargerConnectState = {{ states(e_chargerConnectState) }}
+              e_chargerSwitch = {{ states(e_chargerSwitch) }}
+              e_chargerChargeState = {{ states(e_chargerChargeState) }}
+              e_evBatteryLevel = {% if has_value(e_evBatteryLevel) %}{{ states(e_evBatteryLevel) }}{% else %}{{ 'Not defined' }}{% endif %}
+              e_evChargeLimit = {% if has_value(e_evChargeLimit) %}{{ states(e_evChargeLimit) }}{% else %}{{ 'Not defined' }}{% endif %}
 
   #####################################
   # Exit script
@@ -1615,6 +1891,52 @@ actions:
   # Moved status wait out of if statement to apply wait for all just before exit.
   - delay: "{{ waitApiUpdateHa }}"
 
+  #####################################
+  # Check tomorrow schedule before exit
+  #####################################
+  - variables:
+      setDailyChargeLimit: "{% if has_value(i_setDailyChargeLimit) %}{{ states(i_setDailyChargeLimit) }}{% else %}{{ 'off' }}{% endif %}"
+      nowTime: "{{ now() }}"
+      # Tomorrow has charge end time ?
+      tomorrowIdx: "{{ ( now().weekday() + 1 ) % 7 }}"
+      tomorrowHasChargeEndTime: >
+        {% if setDailyChargeLimit == 'on' %}
+          {{ chargeLimitList[tomorrowIdx][k_chargeCompletionTime] != charge_completion_time_default }}
+        {% else %}
+          {{ false }}
+        {% endif %}
+      # Calculate tomorrow charge end time
+      tomorrowChargeEndTime: "{{ today_at('00:00:00') + timedelta(hours = 24) + as_timedelta(chargeLimitList[tomorrowIdx][k_chargeCompletionTime]) }}"
+      # state_attr('sun.sun', 'next_rising').isoformat() is ISO 8601 formatted and has T between date and time, ie. can only compare with another ISO formatted string.
+      tomorrowChargeStartTime: "{{ (state_attr('sun.sun', 'next_rising') | as_datetime + timedelta(seconds = (centreOfSunDegreeBelowHorizonAtSunrise + sunriseElevationStartTrigger) * secondsPerDegreeSunrise)) | as_timestamp | timestamp_local }}"
+      tomorrowAvailableChargeDuration: "{{ tomorrowChargeEndTime | as_timestamp - tomorrowChargeStartTime | as_timestamp }}"
+      tomorrowNeedChargeDuration: >
+        {% if has_value(e_evBatteryLevel) and has_value(e_evChargeLimit) %}
+          {{ (states(e_evChargeLimit) | int - states(e_evBatteryLevel) | int) * maxChargeRateHourPerPercent * 60 * 60 }}
+        {% else %}
+          {{ 100 * maxChargeRateHourPerPercent * 60 * 60 }}
+        {% endif %}
+      tomorrowProposeChargeStartTime: "{{ tomorrowChargeEndTime | as_datetime - timedelta(seconds = tomorrowNeedChargeDuration) }}"
+      tomorrowNewChargeStartTime: >
+        {% if tomorrowProposeChargeStartTime <= nowTime %}
+          {{ nowTime | as_datetime + timedelta(minutes = 2) }}
+        {% else %}
+          {{ tomorrowProposeChargeStartTime }}
+        {% endif %}
+
+  - alias: "Set trigger time if need to meet next charge completion time"
+    if:
+      - condition: template
+        value_template: "{{ tomorrowHasChargeEndTime and tomorrowNeedChargeDuration > tomorrowAvailableChargeDuration }}"
+    then:
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: "{{ e_nextChargeTimeTrigger }}"
+        data:
+          timestamp: "{{ tomorrowNewChargeStartTime | as_timestamp }}"
+
+# Exiting script due to charger turned off manually or automatically by car when charge limit reached.
+# If this is unexpected, try increasing wait time for "Wait status update".
 ###############################################################################
 # Only one Blueprint can run at any one time
 ###############################################################################
