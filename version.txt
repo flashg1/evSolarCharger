@@ -3,6 +3,7 @@ EV Solar Charger
 
 v3.0beta34  28/4/2025
 -   Breaking change: Implemented just-in-time schedule charging to required charge limit. Need to create "Next charge time trigger" datetime helper.
+-   Automatically charge a bit more today if today has no charge end time and tomorrow has much higher charge limit.
 -   Updated doc.
 
 v3.0beta33  14/4/2025

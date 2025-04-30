@@ -1342,18 +1342,27 @@ actions:
 
             badWeatherPeriodMaxChargeLimit: "{{ badWeatherPeriodChargeLimitList | max }}"
 
-            #todayChargeLimit: "{{ chargeLimitList[todayIndex][k_chargeLimit] }}"
             todayChargeLimit: "{{ chargeLimitConfig[k_chargeLimit] }}"
 
             # See https://www.home-assistant.io/integrations/weather/
             # Some possible values: rainy, cloudy, partlycloudy, clear-night
-            finalChargeLimit: >
+            proposeChargeLimit: >
               {% if adjustChargeLimitBasedOnWeather == 'on'
               and 'rainy' in periodForecastList
               and badWeatherPeriodMaxChargeLimit > todayChargeLimit %}
                 {{ badWeatherPeriodMaxChargeLimit }}
               {% else %}
                 {{ todayChargeLimit }} 
+              {% endif %}
+
+            # Automatically charge a bit more today if today has no charge end time and tomorrow has much higher charge limit.
+            tomorrowChargeLimit: "{{ chargeLimitList[tomorrowIndex][k_chargeLimit] }}"
+            maxChargeLimitDifference: 20
+            finalChargeLimit: >
+              {% if not hasChargeEndTime and (tomorrowChargeLimit - proposeChargeLimit) > maxChargeLimitDifference %}
+                {{ tomorrowChargeLimit - maxChargeLimitDifference }}
+              {% else %}
+                {{ proposeChargeLimit }} 
               {% endif %}
 
         # Show current status
