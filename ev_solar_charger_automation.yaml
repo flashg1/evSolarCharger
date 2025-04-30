@@ -1201,45 +1201,41 @@ actions:
       e_evWakeUp: "{{ chargeApi[k_ev_wake_up] }}"
       e_evForceUpdateHa: "{{ chargeApi[k_ev_status_update] }}"
 
-      isDaytime: >
-        {% if (is_state_attr('sun.sun', 'rising', true) and state_attr('sun.sun', 'elevation') > sunriseElevationStartTrigger)
-        or (is_state_attr('sun.sun', 'rising', false) and state_attr('sun.sun', 'elevation') > sunsetElevationEndTrigger) %}
-          {{ true }}
-        {% else %}
-          {{ false }}
-        {% endif %}
-
-      # chargeLimitConfig: >
-      #   {% if isSelfTriggered %}
-      #     {% if isDaytime %}
-      #       {{ chargeLimitList[todayIndex] }}
-      #     {% else %}
-      #       {{ chargeLimitList[tomorrowIndex] }}
-      #     {% endif %}
+      # Not used
+      # isDaytime: >
+      #   {% if (is_state_attr('sun.sun', 'rising', true) and state_attr('sun.sun', 'elevation') > sunriseElevationStartTrigger)
+      #   or (is_state_attr('sun.sun', 'rising', false) and state_attr('sun.sun', 'elevation') > sunsetElevationEndTrigger) %}
+      #     {{ true }}
       #   {% else %}
-      #     {{ chargeLimitList[todayIndex] }}
+      #     {{ false }}
       #   {% endif %}
 
+      # Today = midnight to sunset
+      # Tomorrow = sunset to midnight
+      sunsetTime: "{{ state_attr('sun.sun', 'next_setting') | as_timestamp | timestamp_custom('%H:%M:%S') }}"
+      todaySunset: "{{ today_at(sunsetTime) }}"
+      isToday: "{{ now() < (todaySunset | as_datetime) }}"
+
       chargeLimitConfig: >
-        {% if isDaytime %}
+        {% if isToday %}
           {{ chargeLimitList[todayIndex] }}
         {% else %}
           {{ chargeLimitList[tomorrowIndex] }}
         {% endif %}
 
-      # Calculate charge end time
+      chargeEndTime: >
+        {% if isToday %}
+          {{ today_at(chargeLimitConfig[k_chargeCompletionTime]) }}
+        {% else %}
+          {{ today_at(chargeLimitConfig[k_chargeCompletionTime]) + timedelta(days = 1) }}
+        {% endif %}
+
+      # Need to meet charge end time?
       hasChargeEndTime: >
         {% if setDailyChargeLimit == 'on' %}
           {{ chargeLimitConfig[k_chargeCompletionTime] != charge_completion_time_default }}
         {% else %}
           {{ false }}
-        {% endif %}
-
-      chargeEndTime: >
-        {% if isDaytime %}
-          {{ today_at(chargeLimitConfig[k_chargeCompletionTime]) }}
-        {% else %}
-          {{ today_at(chargeLimitConfig[k_chargeCompletionTime]) + timedelta(days = 1) }}
         {% endif %}
 
       debug_chargeLimitConfig: |
@@ -1641,6 +1637,17 @@ actions:
                       entity_id: "{{ e_chargerAmp }}"
               - delay: "{{ wait_current_change }}"
 
+              # Ensure status update after turning on charger
+              - if:
+                  - condition: template
+                    value_template: "{{ has_value(e_evForceUpdateHa) }}"
+                then:
+                  - action: "{{ states[e_evForceUpdateHa]['domain'] }}.press"
+                    data: {}
+                    target:
+                      entity_id: "{{ e_evForceUpdateHa }}"
+              - delay: "{{ waitApiUpdateHa }}"
+
           #####################################
           # Change charging current if required
           #####################################
@@ -1803,9 +1810,9 @@ actions:
           {{ false }}
         {% endif %}
       # Calculate tomorrow charge end time
-      tomorrowChargeEndTime: "{{ today_at('00:00:00') + timedelta(hours = 24) + as_timedelta(chargeLimitList[tomorrowIdx][k_chargeCompletionTime]) }}"
       # state_attr('sun.sun', 'next_rising').isoformat() is ISO 8601 formatted and has T between date and time, ie. can only compare with another ISO formatted string.
-      tomorrowChargeStartTime: "{{ (state_attr('sun.sun', 'next_rising') | as_datetime + timedelta(seconds = (centreOfSunDegreeBelowHorizonAtSunrise + sunriseElevationStartTrigger) * secondsPerDegreeSunrise)) | as_timestamp | timestamp_local }}"
+      tomorrowChargeEndTime: "{{ today_at('00:00:00') + timedelta(hours = 24) + as_timedelta(chargeLimitList[tomorrowIdx][k_chargeCompletionTime]) }}"
+      tomorrowChargeStartTime: "{{ today_at(state_attr('sun.sun', 'next_rising') | as_timestamp | timestamp_custom('%H:%M:%S')) + timedelta(days = 1, seconds = (centreOfSunDegreeBelowHorizonAtSunrise + sunriseElevationStartTrigger) * secondsPerDegreeSunrise) }}"
       tomorrowAvailableChargeDuration: "{{ tomorrowChargeEndTime | as_timestamp - tomorrowChargeStartTime | as_timestamp }}"
       tomorrowNeedChargeDuration: >
         {% if has_value(e_evBatteryLevel) and has_value(e_evChargeLimit) %}
