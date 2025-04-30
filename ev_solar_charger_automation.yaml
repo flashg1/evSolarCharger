@@ -1201,7 +1201,10 @@ actions:
       e_evWakeUp: "{{ chargeApi[k_ev_wake_up] }}"
       e_evForceUpdateHa: "{{ chargeApi[k_ev_status_update] }}"
 
-      # For self-triggered automation to meet a particular charge end time, today = midnight to sunset, tomorrow = sunset to midnight.
+      # Self-triggered automation usually need to run at night to meet charge limit at charge end time.
+      # Self-triggered automation will try to reach charge limit at charge end time using solar and/or grid.
+      # For charge limit with charge end time, today = 00:00 to sunset, tomorrow = sunset to 00:00.
+      # For charge limit without charge end time, today = 00:00 to 23:59.  Reaching charge limit is best effort only and depends on solar.
       sunsetTime: "{{ state_attr('sun.sun', 'next_setting') | as_timestamp | timestamp_custom('%H:%M:%S') }}"
       todaySunset: "{{ today_at(sunsetTime) }}"
       isToday: >
@@ -1480,7 +1483,7 @@ actions:
             - condition: or
               conditions:
 
-                - alias: "Continue if automation is before charge end time"
+                - alias: "Continue if automation is running before charge end time"
                   condition: template
                   value_template: "{{ hasChargeEndTime and (chargeEndTime | as_datetime > now()) }}"
 
@@ -1518,9 +1521,9 @@ actions:
                 {{ false }}
               {% endif %}
 
-            # Minimum charge current
+            # Maximise minimum charge current if charge end time is set and there is not enough time to charge or it is night time.
             chargerMinCurrent: >
-              {% if hasChargeEndTime and chargeEndTime > nowTime and (needChargeDuration >= availableChargeDuration or not isDaylightHour) %}
+              {% if hasChargeEndTime and (needChargeDuration >= availableChargeDuration or not isDaylightHour) %}
                 {{ chargerMaxCurrent }}
               {% elif has_value(e_chargerMinCurrent) %}
                 {% set minCurrent = states(e_chargerMinCurrent) | int %}
