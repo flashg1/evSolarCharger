@@ -1353,12 +1353,24 @@ actions:
                 {{ todayChargeLimit }} 
               {% endif %}
 
-            # Automatically charge a bit more today if today has no charge end time and tomorrow has much higher charge limit.
-            tomorrowChargeLimit: "{{ chargeLimitList[tomorrowIndex][k_chargeLimit] }}"
-            maxChargeLimitDifference: 20
+            # Look ahead charge limit list including today
+            maxChargeLimitDifference: 10
+            lookAheadChargeLimitDays: 4
+            lookAheadChargeLimitList: >
+              {% set data = namespace(numbers=[]) %}
+              {% for i in range(0, lookAheadChargeLimitDays, 1) %}
+                {% set day = (todayIndex + i) % 7 %}
+                {% set data.numbers = data.numbers + [chargeLimitList[day][k_chargeLimit]] %}
+              {% endfor %}
+              {{ data.numbers }}
+            lookAheadMaxChargeLimit: "{{ max(lookAheadChargeLimitList) }}"
+            lookAheadMaxChargeLimitIndex: "{{ lookAheadChargeLimitList.index(lookAheadMaxChargeLimit) }}"
+            lookAheadChargeLimit: "{{ lookAheadMaxChargeLimit - (lookAheadMaxChargeLimitIndex * maxChargeLimitDifference) }}"
+
+            # Automatically charge more today if today has no charge end time and next 4 days have much higher charge limit.
             finalChargeLimit: >
-              {% if not hasChargeEndTime and (tomorrowChargeLimit - proposeChargeLimit) > maxChargeLimitDifference %}
-                {{ tomorrowChargeLimit - maxChargeLimitDifference }}
+              {% if not hasChargeEndTime and lookAheadChargeLimit > proposeChargeLimit %}
+                {{ lookAheadChargeLimit }}
               {% else %}
                 {{ proposeChargeLimit }} 
               {% endif %}
