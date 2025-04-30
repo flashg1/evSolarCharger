@@ -1043,8 +1043,8 @@ variables:
   charge_limit_default: 60
   charge_completion_time_default: '00:00:00'
 
-  # Used to estimate charge completion time
-  maxChargeRateHourPerPercent: 0.17
+  # Used to estimate charge completion time (charge rate for 15A = 23.7km/hr, 409.625km=100%=17.28hr, 1%=0.1728hr)
+  maxChargeRateHourPerPercent: 0.1728
   # Sunrise is defined as the instant when the upper limb of the sun's disk is just touching the horizon, which corresponds to a solar altitude of -0.833 degrees.
   # For Sydney on 28/4/2025, sunrise at 6:28am, 6 degree elevation at 07:01:43am, (07:01:43 - 6:28:00) / (0.833 + 6) = 296.063 seconds/degree
   secondsPerDegreeSunrise: 296.063
@@ -1201,20 +1201,15 @@ actions:
       e_evWakeUp: "{{ chargeApi[k_ev_wake_up] }}"
       e_evForceUpdateHa: "{{ chargeApi[k_ev_status_update] }}"
 
-      # Not used
-      # isDaytime: >
-      #   {% if (is_state_attr('sun.sun', 'rising', true) and state_attr('sun.sun', 'elevation') > sunriseElevationStartTrigger)
-      #   or (is_state_attr('sun.sun', 'rising', false) and state_attr('sun.sun', 'elevation') > sunsetElevationEndTrigger) %}
-      #     {{ true }}
-      #   {% else %}
-      #     {{ false }}
-      #   {% endif %}
-
-      # Today = midnight to sunset
-      # Tomorrow = sunset to midnight
+      # For self-triggered automation to meet a particular charge end time, today = midnight to sunset, tomorrow = sunset to midnight.
       sunsetTime: "{{ state_attr('sun.sun', 'next_setting') | as_timestamp | timestamp_custom('%H:%M:%S') }}"
       todaySunset: "{{ today_at(sunsetTime) }}"
-      isToday: "{{ now() < (todaySunset | as_datetime) }}"
+      isToday: >
+        {% if isSelfTriggered %}
+          {{ now() < (todaySunset | as_datetime) }}
+        {% else %}
+          {{ true }}
+        {% endif %}
 
       chargeLimitConfig: >
         {% if isToday %}
@@ -1485,9 +1480,9 @@ actions:
             - condition: or
               conditions:
 
-                - alias: "Continue if automation is self-triggered"
+                - alias: "Continue if automation is before charge end time"
                   condition: template
-                  value_template: "{{ isSelfTriggered }}"
+                  value_template: "{{ hasChargeEndTime and (chargeEndTime | as_datetime > now()) }}"
 
                 - alias: "Continue if using secondary power source"
                   condition: template
@@ -1515,9 +1510,17 @@ actions:
                 {{ 100 * maxChargeRateHourPerPercent * 60 * 60 }}
               {% endif %}
 
+            isDaylightHour: >
+              {% if (is_state_attr('sun.sun', 'rising', true) and state_attr('sun.sun', 'elevation') > sunriseElevationStartTrigger)
+              or (is_state_attr('sun.sun', 'rising', false) and state_attr('sun.sun', 'elevation') > sunsetElevationEndTrigger) %}
+                {{ true }}
+              {% else %}
+                {{ false }}
+              {% endif %}
+
             # Minimum charge current
             chargerMinCurrent: >
-              {% if hasChargeEndTime and chargeEndTime > nowTime and needChargeDuration >= availableChargeDuration %}
+              {% if hasChargeEndTime and chargeEndTime > nowTime and (needChargeDuration >= availableChargeDuration or not isDaylightHour) %}
                 {{ chargerMaxCurrent }}
               {% elif has_value(e_chargerMinCurrent) %}
                 {% set minCurrent = states(e_chargerMinCurrent) | int %}
