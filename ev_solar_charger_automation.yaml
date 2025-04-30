@@ -85,10 +85,10 @@ blueprint:
     next_charge_time_trigger:
       name: Next charge time trigger
       description: >
-        ***Create datetime helper with both date and time selected.***
-        The datetime helper will be used to trigger this automation to meet charge completion time outside of daylight hours.
-        If required, this automation will automatically set the helper date and time.
-        (Trigger entities must be defined whether they are used or not.)
+        ***Create date/time helper with both date and time selected.***
+        The helper will be used to trigger this automation to meet charge completion time outside of daylight hours.
+        The date/time triggered will be set by this automation when required.
+        (Trigger entities must be created whether they are used or not.)
       selector:
         entity:
           domain:
@@ -97,7 +97,7 @@ blueprint:
     charger_min_current:
       name: Charger minimum current
       description: >
-        Number or template sensor to specify the minimum charging current when there is not enough solar electricity.
+        Create number or template helper to specify the minimum charging current when there is not enough solar electricity.
           * The default is 0A if not defined.
       default: number.user_custom
       selector:
@@ -200,7 +200,7 @@ blueprint:
     power_offset_from_zero:
       name: Power offset for import from or export to secondary power source (eg. grid/battery)
       description: >
-        Number or template sensor to specify maximum power flow to or from secondary power source at all times.
+        Create number or template helper to specify maximum power flow to or from secondary power source at all times.
         Set negative value to import from secondary power source, or positive value to export to secondary power source.
         Suggest to set to 0 Watt to charge from solar only.
           * The default is 0W if not defined.
@@ -268,7 +268,7 @@ blueprint:
     charge_completion_time_monday:
       name: Monday charge completion time
       description: >
-        Create date and time helper to set charge completion time for day (valid range: 00:01 - 23:59).
+        Create time helper to set charge completion time for day (valid range: 00:01 - 23:59).
         Set to 00:00 to indicate no completion time.
           * The default is 00:00 if not defined.
       default: datetime.user_custom
@@ -291,7 +291,7 @@ blueprint:
     charge_completion_time_tuesday:
       name: Tuesday charge completion time
       description: >
-        Create date and time helper to set charge completion time for day (valid range: 00:01 - 23:59).
+        Create time helper to set charge completion time for day (valid range: 00:01 - 23:59).
         Set to 00:00 to indicate no completion time.
           * The default is 00:00 if not defined.
       default: datetime.user_custom
@@ -314,7 +314,7 @@ blueprint:
     charge_completion_time_wednesday:
       name: Wednesday charge completion time
       description: >
-        Create date and time helper to set charge completion time for day (valid range: 00:01 - 23:59).
+        Create time helper to set charge completion time for day (valid range: 00:01 - 23:59).
         Set to 00:00 to indicate no completion time.
           * The default is 00:00 if not defined.
       default: datetime.user_custom
@@ -337,7 +337,7 @@ blueprint:
     charge_completion_time_thursday:
       name: Thursday charge completion time
       description: >
-        Create date and time helper to set charge completion time for day (valid range: 00:01 - 23:59).
+        Create time helper to set charge completion time for day (valid range: 00:01 - 23:59).
         Set to 00:00 to indicate no completion time.
           * The default is 00:00 if not defined.
       default: datetime.user_custom
@@ -360,7 +360,7 @@ blueprint:
     charge_completion_time_friday:
       name: Friday charge completion time
       description: >
-        Create date and time helper to set charge completion time for day (valid range: 00:01 - 23:59).
+        Create time helper to set charge completion time for day (valid range: 00:01 - 23:59).
         Set to 00:00 to indicate no completion time.
           * The default is 00:00 if not defined.
       default: datetime.user_custom
@@ -383,7 +383,7 @@ blueprint:
     charge_completion_time_saturday:
       name: Saturday charge completion time
       description: >
-        Create date and time helper to set charge completion time for day (valid range: 00:01 - 23:59).
+        Create time helper to set charge completion time for day (valid range: 00:01 - 23:59).
         Set to 00:00 to indicate no completion time.
           * The default is 00:00 if not defined.
       default: datetime.user_custom
@@ -406,7 +406,7 @@ blueprint:
     charge_completion_time_sunday:
       name: Sunday charge completion time
       description: >
-        Create date and time helper to set charge completion time for day (valid range: 00:01 - 23:59).
+        Create time helper to set charge completion time for day (valid range: 00:01 - 23:59).
         Set to 00:00 to indicate no completion time.
           * The default is 00:00 if not defined.
       default: datetime.user_custom
