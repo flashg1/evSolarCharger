@@ -74,6 +74,7 @@ Device: Envoy [YourEnvoyId]
 -	Create following non-optional helpers, eg.
 Settings > Devices & Services > Helpers > Create Helper >
 1.  Number or template sensor: MyEV charger effective voltage (for single-phase or 3-phase system)
+1.  Date and time: MyEV next charge time trigger
 
 -	Optionally create following helpers, or create them later for finer control, eg.
 Settings > Devices & Services > Helpers > Create Helper >
@@ -83,6 +84,7 @@ Settings > Devices & Services > Helpers > Create Helper >
 1.	Toggle: MyEV set daily charge limit
 1.	Toggle: MyEV adjust charge limit based on weather
 1.	Number: MyEV charge limit Monday .. Sunday
+1.	Time: MyEV charge end time Monday .. Sunday
 1.  Number: MyEV publish charge limit (only required if setting charge limit is not supported by car specific API)
 1.	Toggle: MyEV stop charging
 
