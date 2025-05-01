@@ -87,8 +87,9 @@ blueprint:
       name: Next charge time trigger
       description: >
         ***Create date/time helper with both date and time selected.***
-        The helper will be used to trigger this automation to meet charge completion time outside of daylight hours.
-        The date/time triggered will be set by this automation when required.
+        If required, the date/time trigger will be set by this automation just before the end of the current charging session.
+        Once set, the helper will trigger the next run to meet charge completion time outside of daylight hours.
+        Requires "Set daily charge limit toggle" to be toggled on.
         (Trigger entities must be created whether they are used or not.)
       selector:
         entity:
@@ -113,7 +114,7 @@ blueprint:
     charger_min_current:
       name: Charger minimum current
       description: >
-        Create number or template helper to specify the minimum charging current when there is not enough solar electricity.
+        Create number or template helper to specify the minimum charge current at all times.
           * The default is 0A if not defined.
       default: number.user_custom
       selector:
