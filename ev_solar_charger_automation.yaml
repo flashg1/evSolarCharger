@@ -87,9 +87,9 @@ blueprint:
       name: Next charge time trigger
       description: >
         ***Create date/time helper with both date and time selected.***
-        If required, the date/time trigger will be set by this automation just before the end of the current charging session.
-        Once set, the helper will trigger the next run to meet charge completion time outside of daylight hours.
-        Requires "Set daily charge limit toggle" to be toggled on.
+        In preparation for tomorrow's charging session, the date/time trigger will be set by this automation just before the end of the current charging session.
+        Once set, the helper will trigger the next run to meet charge completion time using secondary power source (grid/battery) and solar.
+        Requires "Set daily charge limit toggle" to be on and charge completion time to be set for the day.
         (Trigger entities must be created whether they are used or not.)
       selector:
         entity:
@@ -215,7 +215,7 @@ blueprint:
           mode: box
 
     power_offset_from_zero:
-      name: Power offset for import from or export to secondary power source (eg. grid/battery)
+      name: Power offset for import from or export to secondary power source (grid/battery)
       description: >
         Create number or template helper to specify maximum power flow to or from secondary power source at all times.
         Set negative value to import from secondary power source, or positive value to export to secondary power source.
@@ -233,7 +233,7 @@ blueprint:
       name: Secondary power source toggle for night time charging
       description: >
         Create toggle helper.
-        Toggle on to charge from secondary power source (eg. grid/battery) at night using power offset or minimum current.
+        Toggle on to charge from secondary power source (grid/battery) at night using power offset or minimum current.
         Toggle off to charge car during daytime only.
           * The default is off if not defined.
       default: boolean.user_custom
@@ -1514,6 +1514,12 @@ actions:
             - condition: or
               conditions:
 
+                - alias: "Continue if sun is above start or end elevations"
+                  condition: template
+                  value_template: >
+                    {{ (is_state_attr('sun.sun', 'rising', true) and state_attr('sun.sun', 'elevation') >= sunriseElevationStartTrigger)
+                    or (is_state_attr('sun.sun', 'rising', false) and state_attr('sun.sun', 'elevation') > sunsetElevationEndTrigger) }}
+
                 - alias: "Continue if automation is running before charge end time"
                   condition: template
                   value_template: "{{ hasChargeEndTime and (chargeEndTime | as_datetime > now()) }}"
@@ -1521,12 +1527,6 @@ actions:
                 - alias: "Continue if using secondary power source"
                   condition: template
                   value_template: "{{ has_value(e_useSecondaryPowerSource) and is_state(e_useSecondaryPowerSource, 'on') }}"
-
-                - alias: "Continue if sun is above start or end elevations"
-                  condition: template
-                  value_template: >
-                    {{ (is_state_attr('sun.sun', 'rising', true) and state_attr('sun.sun', 'elevation') >= sunriseElevationStartTrigger)
-                    or (is_state_attr('sun.sun', 'rising', false) and state_attr('sun.sun', 'elevation') > sunsetElevationEndTrigger) }}
 
       sequence:
         #####################################
