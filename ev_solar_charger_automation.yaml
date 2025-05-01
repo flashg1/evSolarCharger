@@ -1367,7 +1367,7 @@ actions:
             lookAheadMaxChargeLimitIndex: "{{ lookAheadChargeLimitList.index(lookAheadMaxChargeLimit) }}"
             lookAheadChargeLimit: "{{ lookAheadMaxChargeLimit - (lookAheadMaxChargeLimitIndex * maxChargeLimitDifference) }}"
 
-            # Automatically charge more today if today has no charge end time and next 4 days have much higher charge limit.
+            # Automatically charge more today if today has no charge end time and next 3 days have much higher charge limit.
             finalChargeLimit: >
               {% if not hasChargeEndTime and lookAheadChargeLimit > proposeChargeLimit %}
                 {{ lookAheadChargeLimit }}
