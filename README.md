@@ -75,6 +75,7 @@ Device: Envoy [YourEnvoyId]
 Settings > Devices & Services > Helpers > Create Helper >
 1.  Number or template sensor: MyEV charger effective voltage (for single-phase or 3-phase system)
 1.  Date and time: MyEV next charge time trigger
+1.  Number or template sensor: MyEV battery maximum charge speed
 
 -	Optionally create following helpers, or create them later for finer control, eg.
 Settings > Devices & Services > Helpers > Create Helper >

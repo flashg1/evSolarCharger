@@ -24,6 +24,7 @@ blueprint:
       * Main power net
       * Charger effective voltage and maximum current
       * Next charge time trigger
+      * Battery maximum charge speed
       * Charge control API selection
       * Car or charger unique identifier
 
@@ -93,6 +94,21 @@ blueprint:
         entity:
           domain:
             - input_datetime
+
+    battery_max_charge_speed:
+      name: Battery maximum charge speed
+      description: >
+        Create number or template helper to specify the battery **maximum** charge speed in hour per percentage rise in battery charge level.
+        The battery charge speed is used in schedule charging to estimate the time required to charge the battery to a specific percentage.
+        Determine your own battery specific charge speed when using maximum charge current.
+          * The default is 0.1728 hour/percent for 15A max charge current if not defined.
+      default: number.user_custom
+      selector:
+        entity:
+          domain:
+            - input_number
+            - number
+            - sensor
 
     charger_min_current:
       name: Charger minimum current
@@ -1043,8 +1059,6 @@ variables:
   charge_limit_default: 60
   charge_completion_time_default: '00:00:00'
 
-  # Used to estimate charge completion time (charge rate for 15A = 23.7km/hr, 409.625km=100%=17.28hr, 1%=0.1728hr)
-  maxChargeRateHourPerPercent: 0.1728
   # Sunrise is defined as the instant when the upper limb of the sun's disk is just touching the horizon, which corresponds to a solar altitude of -0.833 degrees.
   # For Sydney on 28/4/2025, sunrise at 6:28am, 6 degree elevation at 07:01:43am, (07:01:43 - 6:28:00) / (0.833 + 6) = 296.063 seconds/degree
   secondsPerDegreeSunrise: 296.063
@@ -1107,6 +1121,9 @@ variables:
   #####################################
   i_setDailyChargeLimit: !input toggle_set_daily_charge_limit
   setDailyChargeLimit: "{% if has_value(i_setDailyChargeLimit) %}{{ states(i_setDailyChargeLimit) }}{% else %}{{ 'off' }}{% endif %}"
+  # Used to estimate charge completion time. For Tesla M3, charge rate for 15A = 23.7km/hr, 409.625km=100%=17.28hr, 1%=0.1728hr
+  i_batteryMaxChargeSpeed: !input battery_max_charge_speed
+  batteryMaxChargeSpeed: "{% if has_value(i_batteryMaxChargeSpeed) %}{{ states(i_batteryMaxChargeSpeed) }}{% else %}{{ 0.1728 }}{% endif %}"
 
   i_chargeLimitMon: !input charge_limit_monday
   i_chargeLimitTue: !input charge_limit_tuesday
@@ -1241,6 +1258,7 @@ actions:
         triggerEntityId = {{ triggerEntityId }}
         isSelfTriggered = {{ isSelfTriggered }}
         setDailyChargeLimit = {{ setDailyChargeLimit }}
+        batteryMaxChargeSpeed = {{ batteryMaxChargeSpeed }}
         chargeLimitList = {{ chargeLimitList }}
         todayIndex = {{ todayIndex }}
         tomorrowIndex = {{ tomorrowIndex }}
@@ -1520,9 +1538,9 @@ actions:
             availableChargeDuration: "{{ chargeEndTime | as_timestamp - nowTime | as_timestamp }}"
             needChargeDuration: >
               {% if has_value(e_evBatteryLevel) and has_value(e_evChargeLimit) %}
-                {{ (states(e_evChargeLimit) | int - states(e_evBatteryLevel) | int) * maxChargeRateHourPerPercent * 60 * 60 }}
+                {{ (states(e_evChargeLimit) | int - states(e_evBatteryLevel) | int) * batteryMaxChargeSpeed * 60 * 60 }}
               {% else %}
-                {{ 100 * maxChargeRateHourPerPercent * 60 * 60 }}
+                {{ 100 * batteryMaxChargeSpeed * 60 * 60 }}
               {% endif %}
 
             isDaylightHour: >
@@ -1843,9 +1861,9 @@ actions:
       tomorrowAvailableChargeDuration: "{{ tomorrowChargeEndTime | as_timestamp - tomorrowChargeStartTime | as_timestamp }}"
       tomorrowNeedChargeDuration: >
         {% if has_value(e_evBatteryLevel) and has_value(e_evChargeLimit) %}
-          {{ (states(e_evChargeLimit) | int - states(e_evBatteryLevel) | int) * maxChargeRateHourPerPercent * 60 * 60 }}
+          {{ (states(e_evChargeLimit) | int - states(e_evBatteryLevel) | int) * batteryMaxChargeSpeed * 60 * 60 }}
         {% else %}
-          {{ 100 * maxChargeRateHourPerPercent * 60 * 60 }}
+          {{ 100 * batteryMaxChargeSpeed * 60 * 60 }}
         {% endif %}
       tomorrowProposeChargeStartTime: "{{ tomorrowChargeEndTime | as_datetime - timedelta(seconds = tomorrowNeedChargeDuration) }}"
       tomorrowNewChargeStartTime: >
