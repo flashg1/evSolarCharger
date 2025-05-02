@@ -100,7 +100,7 @@ blueprint:
       name: Battery maximum charge speed
       description: >
         Create number or template helper to specify the battery **maximum** charge speed in hour per percentage rise in battery charge level.
-        The battery charge speed is used in schedule charging to estimate the time required to charge the battery to a specific percentage.
+        The battery charge speed is used in schedule charging to estimate the time required to charge the battery to the specified percentage.
         Determine your own battery specific charge speed when using maximum charge current.
           * The default is 0.1728 hour/percent for 15A max charge current if not defined.
       default: number.user_custom
