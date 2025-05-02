@@ -25,7 +25,7 @@ Features
 -   Automatically adjust to the highest charge limit set within a rainy forecast period.  The highest charge limit is selected from the 7 days charge limit settings that are within the forecast period taking into account the charge limit on bad weather setting.  The objective is to charge more before a rainy period.  Default disabled.
 -   Might be possible to prolong car battery life by setting daily charge limit to 60%, and only charge more before a rainy period by enabling option to adjust daily car charge limit based on weather.
 -   Allow manual top up from secondary power source (eg. grid, battery) if there is not enough solar during the day, or if required to charge during the night. Just need to set the power offset to specify the maximum power to draw from secondary power source. Also need to toggle on secondary power source if required to charge during the night.
--   Allow setting minimum charge current according to your requirement.
+-   Support manually setting or automatic programming of minimum charge current according to your requirement.
 -   Support charging multiple cars at the same time based on power allocation weighting for each car.
 -   Support skew to shift the power export/import curve left or right to achieve your minimal power import.
 -   Configurable return codes for comparison with connect trigger states, connected states and charging states returned by your EV or charger specific API. These states are used to determine the stages of the charging process.
