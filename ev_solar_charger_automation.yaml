@@ -32,7 +32,7 @@ blueprint:
     Helpers can be created on form or at Settings > Devices & Services > Helpers > Create helper.
 
 
-    **Version**: v3.0beta34
+    **Version**: v3.0beta35
 
 
     Your support is much appreciated if you find this project useful.
@@ -1124,7 +1124,8 @@ variables:
   setDailyChargeLimit: "{% if has_value(i_setDailyChargeLimit) %}{{ states(i_setDailyChargeLimit) }}{% else %}{{ 'off' }}{% endif %}"
   # Used to estimate charge completion time. For Tesla M3, charge rate for 15A = 23.7km/hr, 409.625km=100%=17.28hr, 1%=0.1728hr
   i_batteryMaxChargeSpeed: !input battery_max_charge_speed
-  batteryMaxChargeSpeed: "{% if has_value(i_batteryMaxChargeSpeed) %}{{ states(i_batteryMaxChargeSpeed) }}{% else %}{{ 0.1728 }}{% endif %}"
+  batteryMaxChargeSpeed: "{% if has_value(i_batteryMaxChargeSpeed) %}{{ states(i_batteryMaxChargeSpeed) | float }}{% else %}{{ 0.1728 }}{% endif %}"
+  onePercentChargeDuration: "{{ batteryMaxChargeSpeed * 60 * 60 }}"
 
   i_chargeLimitMon: !input charge_limit_monday
   i_chargeLimitTue: !input charge_limit_tuesday
@@ -1260,6 +1261,7 @@ actions:
         isSelfTriggered = {{ isSelfTriggered }}
         setDailyChargeLimit = {{ setDailyChargeLimit }}
         batteryMaxChargeSpeed = {{ batteryMaxChargeSpeed }}
+        onePercentChargeDuration = {{ onePercentChargeDuration }}
         chargeLimitList = {{ chargeLimitList }}
         todayIndex = {{ todayIndex }}
         tomorrowIndex = {{ tomorrowIndex }}
@@ -1502,7 +1504,7 @@ actions:
               condition: template
               value_template: >
                 {% if has_value(e_evBatteryLevel) and has_value(e_evChargeLimit) %}
-                  {{ (states(e_evBatteryLevel) | int) < (states(e_evChargeLimit) | int) }}
+                  {{ (states(e_evBatteryLevel) | float) < (states(e_evChargeLimit) | float) }}
                 {% else %}
                   {{ true }}
                 {% endif %}
@@ -1536,12 +1538,23 @@ actions:
             setDailyChargeLimit: "{% if has_value(i_setDailyChargeLimit) %}{{ states(i_setDailyChargeLimit) }}{% else %}{{ 'off' }}{% endif %}"
             nowTime: "{{ now() }}"
 
+            # Charge current for this sequence run, including sanity check to ensure within limits. OCPP has current with 1 decimal place.
+            batteryChargeCurrent: "{{ states(e_chargerAmp) | round(0) }}"
+            oldChargeCurrent: >
+              {% if batteryChargeCurrent < 0 %}
+                {{ 0 }}
+              {% elif batteryChargeCurrent > chargerMaxCurrent %}
+                {{ chargerMaxCurrent }}
+              {% else %}
+                {{ batteryChargeCurrent }}
+              {% endif %}
+
             availableChargeDuration: "{{ chargeEndTime | as_timestamp - nowTime | as_timestamp }}"
             needChargeDuration: >
               {% if has_value(e_evBatteryLevel) and has_value(e_evChargeLimit) %}
-                {{ (states(e_evChargeLimit) | int - states(e_evBatteryLevel) | int) * batteryMaxChargeSpeed * 60 * 60 }}
+                {{ (states(e_evChargeLimit) | float - states(e_evBatteryLevel) | float) * onePercentChargeDuration }}
               {% else %}
-                {{ 100 * batteryMaxChargeSpeed * 60 * 60 }}
+                {{ 100 * onePercentChargeDuration }}
               {% endif %}
 
             isDaylightHour: >
@@ -1552,9 +1565,17 @@ actions:
                 {{ false }}
               {% endif %}
 
-            # Maximise minimum charge current if charge end time is set and there is not enough time to charge or it is night time.
+            # Maximise minimum charge current if charge end time is set and it is night time or there is not enough time to charge.
+            # chargerMinCurrent might bounce between 0 and chargerMaxCurrent due to battery level not up-to-date or decimal inaccuracy,
+            # so stablise it to chargerMaxCurrent if current is already at chargerMaxCurrent and needChargeDuration is only slightly less than availableChargeDuration.
             chargerMinCurrent: >
-              {% if hasChargeEndTime and (needChargeDuration >= availableChargeDuration or not isDaylightHour) %}
+              {% if hasChargeEndTime and
+                (
+                  not isDaylightHour
+                  or needChargeDuration >= availableChargeDuration
+                  or ((needChargeDuration + onePercentChargeDuration) >= availableChargeDuration and oldChargeCurrent == chargerMaxCurrent)
+                )
+              %}
                 {{ chargerMaxCurrent }}
               {% elif has_value(e_chargerMinCurrent) %}
                 {% set minCurrent = states(e_chargerMinCurrent) | int %}
@@ -1592,24 +1613,13 @@ actions:
             # +ve => importing amp from grid, -ve => exporting amp to grid
             allCurrentNet: "{{ (allPowerNet / chargerEffectiveVoltage) | float }}"
 
-            # Charge current for this sequence run, including sanity check to ensure within limits. OCPP has current with 1 decimal place.
-            chargeCurrent: "{{ states(e_chargerAmp) | round(0) }}"
-            carChargeCurrent: >
-              {% if chargeCurrent < 0 %}
-                {{ 0 }}
-              {% elif chargeCurrent > chargerMaxCurrent %}
-                {{ chargerMaxCurrent }}
-              {% else %}
-                {{ chargeCurrent }}
-              {% endif %}
-
             # If importing from grid, will try to decrease charge current by same consumption or min charger current.
             # If exporting to grid, will try to increase charge current by same production or max charger current.
             proposeChargeCurrent: >
               {% if allCurrentNet > 0 %}
-                {{ [chargerMinCurrent, carChargeCurrent - allCurrentNet] | max | round(0) }}
+                {{ [chargerMinCurrent, oldChargeCurrent - allCurrentNet] | max | round(0) }}
               {% else %}
-                {{ [chargerMaxCurrent, carChargeCurrent - allCurrentNet] | min | round(0) }}
+                {{ [chargerMaxCurrent, oldChargeCurrent - allCurrentNet] | min | round(0) }}
               {% endif %}
             
             # Ensure new charge current is greater than or equal to charger minimum current. Set 0A OCPP current if available current is less than 6A.
@@ -1700,7 +1710,7 @@ actions:
           - conditions:
               - alias: "Set charge current if new current is different from old"
                 condition: template
-                value_template: "{{ newChargeCurrent != carChargeCurrent }}"
+                value_template: "{{ newChargeCurrent != oldChargeCurrent }}"
             sequence:
               - if:
                   - condition: template
@@ -1862,9 +1872,9 @@ actions:
       tomorrowAvailableChargeDuration: "{{ tomorrowChargeEndTime | as_timestamp - tomorrowChargeStartTime | as_timestamp }}"
       tomorrowNeedChargeDuration: >
         {% if has_value(e_evBatteryLevel) and has_value(e_evChargeLimit) %}
-          {{ (states(e_evChargeLimit) | int - states(e_evBatteryLevel) | int) * batteryMaxChargeSpeed * 60 * 60 }}
+          {{ (states(e_evChargeLimit) | float - states(e_evBatteryLevel) | float) * onePercentChargeDuration }}
         {% else %}
-          {{ 100 * batteryMaxChargeSpeed * 60 * 60 }}
+          {{ 100 * onePercentChargeDuration }}
         {% endif %}
       tomorrowProposeChargeStartTime: "{{ tomorrowChargeEndTime | as_datetime - timedelta(seconds = tomorrowNeedChargeDuration) }}"
       tomorrowNewChargeStartTime: >
