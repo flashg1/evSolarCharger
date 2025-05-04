@@ -101,8 +101,9 @@ blueprint:
       description: >
         Create number or template helper to specify the battery **maximum** charge speed in hour per percentage rise in battery charge level.
         The battery charge speed is used in schedule charging to estimate the time required to charge the battery to the specified percentage.
-        Determine your own battery specific charge speed when using maximum charge current.
-          * The default is 0.1728 hour/percent for 15A max charge current if not defined.
+        Determine your own battery specific charge speed when using maximum charge current
+        (see [example](https://github.com/flashg1/evSolarCharger/wiki/Configuration#how-to-determine-battery-maximum-charge-speed)).
+          * The default is 0.1631 hour/percent for 15A max charge current if not defined.
       default: number.user_custom
       selector:
         entity:
@@ -689,8 +690,8 @@ blueprint:
     #####################################
     # EV specific control entities
     #####################################
-    car_sensor_battery:
-      name: EV battery level sensor (optional)
+    battery_level_sensor:
+      name: Battery level sensor (optional)
       description: >
         Sensor that reports car battery charge level.
         This can be EV specific sensor or OCPP sensor provided the appropiate HA integration is installed.
@@ -707,8 +708,8 @@ blueprint:
         entity:
           domain: sensor
 
-    car_number_charge_limit:
-      name: EV charge limit (optional)
+    battery_charge_limit:
+      name: Battery charge limit (optional)
       description: >
         Entity to control car battery charge limit in percentage (100% = fully charged).
         If setting charge limit is not supported by the selected API, then set number helper here to keep track of charge limit.
@@ -868,8 +869,8 @@ trigger_variables:
   k_charger_charge_state: "k_charger_charge_state"
   k_charger_charging_state_list: "k_charger_charging_state_list"
   k_charger_current: "k_charger_current"
-  k_ev_battery_level: "k_ev_battery_level"
-  k_ev_charge_limit: "k_ev_charge_limit"
+  k_battery_level: "k_battery_level"
+  k_charge_limit: "k_charge_limit"
   k_ev_home_state: "k_ev_home_state"
   k_ev_at_home_state_list: "k_ev_at_home_state_list"
   k_ev_wake_up: "k_ev_wake_up"
@@ -882,8 +883,8 @@ trigger_variables:
   i_chargerChargeState: !input charger_charging_sensor
   i_chargerChargingStateList: !input charger_charging_state_list
   i_chargerAmp: !input charger_charging_amps
-  i_evBatteryLevel: !input car_sensor_battery
-  i_evChargeLimit: !input car_number_charge_limit
+  i_batteryLevel: !input battery_level_sensor
+  i_batteryChargeLimit: !input battery_charge_limit
   i_evHomeState: !input car_location_tracker
   i_evAtHomeStateList: !input car_at_home_state_list
   i_evWakeUp: !input car_button_wake_up
@@ -904,8 +905,8 @@ trigger_variables:
     k_charger_charge_state: "binary_sensor.{{ teslaCarName }}charging"
     k_charger_charging_state_list: "{{ rc_tcustom_charging_state }}"
     k_charger_current: "number.{{ teslaCarName }}charging_amps"
-    k_ev_battery_level: "sensor.{{ teslaCarName }}battery"
-    k_ev_charge_limit: "number.{{ teslaCarName }}charge_limit"
+    k_battery_level: "sensor.{{ teslaCarName }}battery"
+    k_charge_limit: "number.{{ teslaCarName }}charge_limit"
     k_ev_home_state: "device_tracker.{{ teslaCarName }}location_tracker"
     k_ev_at_home_state_list: "{{ rc_tcustom_car_at_home }}"
     k_ev_wake_up: "button.{{ teslaCarName }}wake_up"
@@ -919,8 +920,8 @@ trigger_variables:
     k_charger_charge_state: "sensor.{{ teslaCarName }}charging"
     k_charger_charging_state_list: "{{ rc_tfleet_charging_state }}"
     k_charger_current: "number.{{ teslaCarName }}charge_current"
-    k_ev_battery_level: "sensor.{{ teslaCarName }}battery_level"
-    k_ev_charge_limit: "number.{{ teslaCarName }}charge_limit"
+    k_battery_level: "sensor.{{ teslaCarName }}battery_level"
+    k_charge_limit: "number.{{ teslaCarName }}charge_limit"
     k_ev_home_state: "device_tracker.{{ teslaCarName }}location"
     k_ev_at_home_state_list: "{{ rc_tfleet_car_at_home }}"
     k_ev_wake_up: "button.{{ teslaCarName }}wake"
@@ -936,8 +937,8 @@ trigger_variables:
     k_charger_charge_state: "sensor.tesla_ble_{{ bleVinId }}_charging_state"
     k_charger_charging_state_list: "{{ rc_ble_charging_state }}"
     k_charger_current: "number.tesla_ble_{{ bleVinId }}_charging_current"
-    k_ev_battery_level: "sensor.tesla_ble_{{ bleVinId }}_battery_level"
-    k_ev_charge_limit: "number.tesla_ble_{{ bleVinId }}_charging_limit"
+    k_battery_level: "sensor.tesla_ble_{{ bleVinId }}_battery_level"
+    k_charge_limit: "number.tesla_ble_{{ bleVinId }}_charging_limit"
     k_ev_home_state: "{{ i_evHomeState }}"
     k_ev_at_home_state_list: "{{ i_evAtHomeStateList }}"
     k_ev_wake_up: "button.tesla_ble_{{ bleVinId }}_wake_up_car"
@@ -955,8 +956,8 @@ trigger_variables:
     k_charger_charge_state: "sensor.{{ ocppChargerName }}_status_connector"
     k_charger_charging_state_list: "{{ rc_ocpp_charging_state }}"
     k_charger_current: "sensor.{{ ocppChargerName }}_current_import"
-    k_ev_battery_level: "{{ i_evBatteryLevel }}"
-    k_ev_charge_limit: "{{ i_evChargeLimit }}"
+    k_battery_level: "{{ i_batteryLevel }}"
+    k_charge_limit: "{{ i_batteryChargeLimit }}"
     k_ev_home_state: "{{ i_evHomeState }}"
     k_ev_at_home_state_list: "{{ i_evAtHomeStateList }}"
     k_ev_wake_up: "{{ i_evWakeUp }}"
@@ -970,8 +971,8 @@ trigger_variables:
     k_charger_charge_state: "{{ i_chargerChargeState }}"
     k_charger_charging_state_list: "{{ i_chargerChargingStateList }}"
     k_charger_current: "{{ i_chargerAmp }}"
-    k_ev_battery_level: "{{ i_evBatteryLevel }}"
-    k_ev_charge_limit: "{{ i_evChargeLimit }}"
+    k_battery_level: "{{ i_batteryLevel }}"
+    k_charge_limit: "{{ i_batteryChargeLimit }}"
     k_ev_home_state: "{{ i_evHomeState }}"
     k_ev_at_home_state_list: "{{ i_evAtHomeStateList }}"
     k_ev_wake_up: "{{ i_evWakeUp }}"
@@ -1124,7 +1125,7 @@ variables:
   setDailyChargeLimit: "{% if has_value(i_setDailyChargeLimit) %}{{ states(i_setDailyChargeLimit) }}{% else %}{{ 'off' }}{% endif %}"
   # Used to estimate charge completion time. For Tesla M3, charge rate for 15A = 23.7km/hr, 409.625km=100%=17.28hr, 1%=0.1728hr
   i_batteryMaxChargeSpeed: !input battery_max_charge_speed
-  batteryMaxChargeSpeed: "{% if has_value(i_batteryMaxChargeSpeed) %}{{ states(i_batteryMaxChargeSpeed) | float }}{% else %}{{ 0.1728 }}{% endif %}"
+  batteryMaxChargeSpeed: "{% if has_value(i_batteryMaxChargeSpeed) %}{{ states(i_batteryMaxChargeSpeed) | float }}{% else %}{{ 0.1631 }}{% endif %}"
   onePercentChargeDuration: "{{ batteryMaxChargeSpeed * 60 * 60 }}"
 
   i_chargeLimitMon: !input charge_limit_monday
@@ -1213,8 +1214,8 @@ actions:
       e_chargerChargeState: "{{ chargeApi[k_charger_charge_state] }}"
       rc_chargerChargingStateList: "{{ chargeApi[k_charger_charging_state_list] }}"
       e_chargerAmp: "{{ chargeApi[k_charger_current] }}"
-      e_evBatteryLevel: "{{ chargeApi[k_ev_battery_level] }}"
-      e_evChargeLimit: "{{ chargeApi[k_ev_charge_limit] }}"
+      e_batteryLevel: "{{ chargeApi[k_battery_level] }}"
+      e_chargeLimit: "{{ chargeApi[k_charge_limit] }}"
       e_evHomeState: "{{ chargeApi[k_ev_home_state] }}"
       rc_evAtHomeStateList: "{{ chargeApi[k_ev_at_home_state_list] }}"
       e_evWakeUp: "{{ chargeApi[k_ev_wake_up] }}"
@@ -1421,13 +1422,13 @@ actions:
         # Note: Cannot use number.set_value to set an input_number.
         - if:
             - condition: template
-              value_template: "{{ has_value(e_evChargeLimit) }}"
+              value_template: "{{ has_value(e_chargeLimit) }}"
           then:
-            - action: "{{ states[e_evChargeLimit]['domain'] }}.set_value"
+            - action: "{{ states[e_chargeLimit]['domain'] }}.set_value"
               data:
                 value: "{{ finalChargeLimit }}"
               target:
-                entity_id: "{{ e_evChargeLimit }}"
+                entity_id: "{{ e_chargeLimit }}"
             - delay: "{{ wait_charge_limit }}"
 
         # Car charger is turned on if setting higher charge limit, so must get latest update before proceeding. Otherwise script can exit without turning off charger.
@@ -1459,8 +1460,8 @@ actions:
         e_chargerConnectState = {{ states(e_chargerConnectState) }}
         e_chargerSwitch = {{ states(e_chargerSwitch) }}
         e_chargerChargeState = {{ states(e_chargerChargeState) }}
-        e_evBatteryLevel = {% if has_value(e_evBatteryLevel) %}{{ states(e_evBatteryLevel) }}{% else %}{{ 'Not defined' }}{% endif %}
-        e_evChargeLimit = {% if has_value(e_evChargeLimit) %}{{ states(e_evChargeLimit) }}{% else %}{{ 'Not defined' }}{% endif %}
+        e_batteryLevel = {% if has_value(e_batteryLevel) %}{{ states(e_batteryLevel) }}{% else %}{{ 'Not defined' }}{% endif %}
+        e_chargeLimit = {% if has_value(e_chargeLimit) %}{{ states(e_chargeLimit) }}{% else %}{{ 'Not defined' }}{% endif %}
 
   - repeat:
       #####################################
@@ -1513,8 +1514,8 @@ actions:
             - alias: "Continue if battery is below charge limit"
               condition: template
               value_template: >
-                {% if has_value(e_evBatteryLevel) and has_value(e_evChargeLimit) %}
-                  {{ (states(e_evBatteryLevel) | float) < (states(e_evChargeLimit) | float) }}
+                {% if has_value(e_batteryLevel) and has_value(e_chargeLimit) %}
+                  {{ (states(e_batteryLevel) | float) < (states(e_chargeLimit) | float) }}
                 {% else %}
                   {{ true }}
                 {% endif %}
@@ -1548,6 +1549,29 @@ actions:
             setDailyChargeLimit: "{% if has_value(i_setDailyChargeLimit) %}{{ states(i_setDailyChargeLimit) }}{% else %}{{ 'off' }}{% endif %}"
             nowTime: "{{ now() }}"
 
+            batteryChargeLimit: >
+              {% if has_value(e_chargeLimit) %}
+                {{ states(e_chargeLimit) | float }}
+              {% else %}
+                {{ 100 }}
+              {% endif %}
+            batteryChargeLevel: >
+              {% if has_value(e_batteryLevel) %}
+                {{ states(e_batteryLevel) | float }}
+              {% else %}
+                {{ 0 }}
+              {% endif %}
+            availableChargeDuration: "{{ chargeEndTime | as_timestamp - nowTime | as_timestamp }}"
+            needChargeDuration: "{{ (batteryChargeLimit - batteryChargeLevel) * onePercentChargeDuration }}"
+
+            isDaylightHour: >
+              {% if (is_state_attr('sun.sun', 'rising', true) and state_attr('sun.sun', 'elevation') > sunriseElevationStartTrigger)
+              or (is_state_attr('sun.sun', 'rising', false) and state_attr('sun.sun', 'elevation') > sunsetElevationEndTrigger) %}
+                {{ true }}
+              {% else %}
+                {{ false }}
+              {% endif %}
+
             # Charge current for this sequence run, including sanity check to ensure within limits. OCPP has current with 1 decimal place.
             batteryChargeCurrent: "{{ states(e_chargerAmp) | round(0) }}"
             oldChargeCurrent: >
@@ -1557,22 +1581,6 @@ actions:
                 {{ chargerMaxCurrent }}
               {% else %}
                 {{ batteryChargeCurrent }}
-              {% endif %}
-
-            availableChargeDuration: "{{ chargeEndTime | as_timestamp - nowTime | as_timestamp }}"
-            needChargeDuration: >
-              {% if has_value(e_evBatteryLevel) and has_value(e_evChargeLimit) %}
-                {{ (states(e_evChargeLimit) | float - states(e_evBatteryLevel) | float) * onePercentChargeDuration }}
-              {% else %}
-                {{ 100 * onePercentChargeDuration }}
-              {% endif %}
-
-            isDaylightHour: >
-              {% if (is_state_attr('sun.sun', 'rising', true) and state_attr('sun.sun', 'elevation') > sunriseElevationStartTrigger)
-              or (is_state_attr('sun.sun', 'rising', false) and state_attr('sun.sun', 'elevation') > sunsetElevationEndTrigger) %}
-                {{ true }}
-              {% else %}
-                {{ false }}
               {% endif %}
 
             # Maximise minimum charge current if charge end time is set and it is night time or there is not enough time to charge.
@@ -1643,11 +1651,14 @@ actions:
 
             debug_chargeCurrent: |
               nowTime = {{ nowTime }}
-              batteryChargeCurrent = {{ batteryChargeCurrent }}
-              oldChargeCurrent = {{ oldChargeCurrent }}
+              chargeEndTime = {{ chargeEndTime }}
+              batteryChargeLimit = {{ batteryChargeLimit }}
+              batteryChargeLevel = {{ batteryChargeLevel }}
               availableChargeDuration = {{ availableChargeDuration }}
               needChargeDuration = {{ needChargeDuration }}
               isDaylightHour = {{ isDaylightHour }}
+              batteryChargeCurrent = {{ batteryChargeCurrent }}
+              oldChargeCurrent = {{ oldChargeCurrent }}
               chargerMinCurrent = {{ chargerMinCurrent }}
               powerOffset = {{ powerOffset }}
               feedbackLoopPower = {{ feedbackLoopPower }}
@@ -1809,8 +1820,8 @@ actions:
               e_chargerConnectState = {{ states(e_chargerConnectState) }}
               e_chargerSwitch = {{ states(e_chargerSwitch) }}
               e_chargerChargeState = {{ states(e_chargerChargeState) }}
-              e_evBatteryLevel = {% if has_value(e_evBatteryLevel) %}{{ states(e_evBatteryLevel) }}{% else %}{{ 'Not defined' }}{% endif %}
-              e_evChargeLimit = {% if has_value(e_evChargeLimit) %}{{ states(e_evChargeLimit) }}{% else %}{{ 'Not defined' }}{% endif %}
+              e_batteryLevel = {% if has_value(e_batteryLevel) %}{{ states(e_batteryLevel) }}{% else %}{{ 'Not defined' }}{% endif %}
+              e_chargeLimit = {% if has_value(e_chargeLimit) %}{{ states(e_chargeLimit) }}{% else %}{{ 'Not defined' }}{% endif %}
 
   #####################################
   # Exit script
@@ -1898,8 +1909,8 @@ actions:
       tomorrowChargeStartTime: "{{ today_at(state_attr('sun.sun', 'next_rising') | as_timestamp | timestamp_custom('%H:%M:%S')) + timedelta(days = 1, seconds = (centreOfSunDegreeBelowHorizonAtSunrise + sunriseElevationStartTrigger) * secondsPerDegreeSunrise) }}"
       tomorrowAvailableChargeDuration: "{{ tomorrowChargeEndTime | as_timestamp - tomorrowChargeStartTime | as_timestamp }}"
       tomorrowNeedChargeDuration: >
-        {% if has_value(e_evBatteryLevel) and has_value(e_evChargeLimit) %}
-          {{ (states(e_evChargeLimit) | float - states(e_evBatteryLevel) | float) * onePercentChargeDuration }}
+        {% if has_value(e_batteryLevel) and has_value(e_chargeLimit) %}
+          {{ (states(e_chargeLimit) | float - states(e_batteryLevel) | float) * onePercentChargeDuration }}
         {% else %}
           {{ 100 * onePercentChargeDuration }}
         {% endif %}
