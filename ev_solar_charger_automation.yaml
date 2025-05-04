@@ -262,6 +262,7 @@ blueprint:
       description: >
         Create toggle helper.
         Toggle on to set charge limit configured for the day once on start up.
+        The automation will charge more today if today has no charge completion time and next 3 days have much higher charge limit.
         If toggled off, the existing car charge limit will be used.
 
 
@@ -1384,7 +1385,10 @@ actions:
                 {{ todayChargeLimit }} 
               {% endif %}
 
-            # Look ahead charge limit list including today
+            # Look ahead charge limit list including today.
+            # Use maxChargeLimitDifference to calculate charge limit for all days except one day before maximum charge limit day.
+            # The day before maximum charge limit day will use minChargeLimitDifference to minimise charge limit difference for the next day.
+            minChargeLimitDifference: 5
             maxChargeLimitDifference: 10
             lookAheadChargeLimitDays: 4
             lookAheadChargeLimitList: >
@@ -1396,7 +1400,12 @@ actions:
               {{ data.numbers }}
             lookAheadMaxChargeLimit: "{{ max(lookAheadChargeLimitList) }}"
             lookAheadMaxChargeLimitIndex: "{{ lookAheadChargeLimitList.index(lookAheadMaxChargeLimit) }}"
-            lookAheadChargeLimit: "{{ lookAheadMaxChargeLimit - (lookAheadMaxChargeLimitIndex * maxChargeLimitDifference) }}"
+            lookAheadChargeLimit: >
+              {% if lookAheadMaxChargeLimitIndex == 1 %}
+                {{ lookAheadMaxChargeLimit - minChargeLimitDifference }}
+              {% else %}
+                {{ lookAheadMaxChargeLimit - (lookAheadMaxChargeLimitIndex * maxChargeLimitDifference) }}
+              {% endif %}
 
             # Automatically charge more today if today has no charge end time and next 3 days have much higher charge limit.
             finalChargeLimit: >
