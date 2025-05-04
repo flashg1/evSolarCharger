@@ -3,6 +3,7 @@ EV Solar Charger
 
 v3.0beta35  3/5/2025
 -   Minimise charge current bounce between 0 and max charge current when charge end time is set.
+-   Added debug messages.
 -   Updated doc.
 
 v3.0beta34  28/4/2025

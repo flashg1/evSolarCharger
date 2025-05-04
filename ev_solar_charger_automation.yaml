@@ -1255,18 +1255,27 @@ actions:
           {{ false }}
         {% endif %}
 
-      debug_chargeLimitConfig: |
+      debug_blueprintConfig: |
         myName = {{ this.entity_id }}
         triggerEntityId = {{ triggerEntityId }}
         isSelfTriggered = {{ isSelfTriggered }}
-        setDailyChargeLimit = {{ setDailyChargeLimit }}
         batteryMaxChargeSpeed = {{ batteryMaxChargeSpeed }}
         onePercentChargeDuration = {{ onePercentChargeDuration }}
+        chargerMinWorkableCurrent = {{ chargerMinWorkableCurrent }}
+        chargeApiKey = {{ chargeApiKey }}
+
+      debug_chargeLimitConfig: |
+        setDailyChargeLimit = {{ setDailyChargeLimit }}
+        adjustChargeLimitBasedOnWeather = {{ adjustChargeLimitBasedOnWeather }}
+        chargeLimitOnBadWeather = {{ chargeLimitOnBadWeather }}
         chargeLimitList = {{ chargeLimitList }}
         todayIndex = {{ todayIndex }}
         tomorrowIndex = {{ tomorrowIndex }}
-        adjustChargeLimitBasedOnWeather = {{ adjustChargeLimitBasedOnWeather }}
-        chargeLimitOnBadWeather = {{ chargeLimitOnBadWeather }}
+        todaySunset = {{ todaySunset }}
+        isToday = {{ isToday }}
+        chargeLimitConfig = {{ chargeLimitConfig }}
+        chargeEndTime = {{ chargeEndTime }}
+        hasChargeEndTime = {{ hasChargeEndTime }}
 
   #####################################
   # Init car
@@ -1441,7 +1450,8 @@ actions:
   # Main while loop
   #####################################
   - variables:
-      debug_states: |
+      debug_startingStates: |
+        nowTime = {{ now() }}
         e_stopCharger = {% if has_value(e_stopCharger) %}{{ states(e_stopCharger) }}{% else %}{{ 'Not defined' }}{% endif %}
         e_useSecondaryPowerSource = {% if has_value(e_useSecondaryPowerSource) %}{{ states(e_useSecondaryPowerSource) }}{% else %}{{ 'Not defined' }}{% endif %}
         e_sunElevation = {{ state_attr('sun.sun', 'elevation') }}
@@ -1631,6 +1641,22 @@ actions:
                 {{ newCurrent }}
               {% endif %}
 
+            debug_chargeCurrent: |
+              nowTime = {{ nowTime }}
+              batteryChargeCurrent = {{ batteryChargeCurrent }}
+              oldChargeCurrent = {{ oldChargeCurrent }}
+              availableChargeDuration = {{ availableChargeDuration }}
+              needChargeDuration = {{ needChargeDuration }}
+              isDaylightHour = {{ isDaylightHour }}
+              chargerMinCurrent = {{ chargerMinCurrent }}
+              powerOffset = {{ powerOffset }}
+              feedbackLoopPower = {{ feedbackLoopPower }}
+              chargerEffectiveVoltage = {{ chargerEffectiveVoltage }}
+              allPowerNet = {{ allPowerNet }}
+              allCurrentNet = {{ allCurrentNet }}
+              proposeChargeCurrent = {{ proposeChargeCurrent }}
+              newChargeCurrent = {{ newChargeCurrent }}
+
         - choose:
           #####################################
           # Turn on charger if looping for the first time
@@ -1774,7 +1800,8 @@ actions:
             milliseconds: 0
 
         - variables:
-            debug_states: |
+            debug_newStates: |
+              nowTime = {{ now() }}
               e_stopCharger = {% if has_value(e_stopCharger) %}{{ states(e_stopCharger) }}{% else %}{{ 'Not defined' }}{% endif %}
               e_useSecondaryPowerSource = {% if has_value(e_useSecondaryPowerSource) %}{{ states(e_useSecondaryPowerSource) }}{% else %}{{ 'Not defined' }}{% endif %}
               e_sunElevation = {{ state_attr('sun.sun', 'elevation') }}
