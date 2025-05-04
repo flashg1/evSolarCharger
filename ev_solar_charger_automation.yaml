@@ -32,7 +32,7 @@ blueprint:
     Helpers can be created on form or at Settings > Devices & Services > Helpers > Create helper.
 
 
-    **Version**: v3.0beta35
+    **Version**: v3.0beta36
 
 
     Your support is much appreciated if you find this project useful.
@@ -1546,7 +1546,6 @@ actions:
         # Calculate new charging current
         #####################################
         - variables:
-            setDailyChargeLimit: "{% if has_value(i_setDailyChargeLimit) %}{{ states(i_setDailyChargeLimit) }}{% else %}{{ 'off' }}{% endif %}"
             nowTime: "{{ now() }}"
 
             batteryChargeLimit: >
