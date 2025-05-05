@@ -76,7 +76,7 @@ blueprint:
       name: Charger maximum current
       description: >
         Specify charger maximum current in Ampere.
-        If setting daily charge limit is on and charge completion time is set,
+        If "Set daily charge limit" is on and charge completion time for day is set,
         the maximum charge current will be used to meet charge completion time if there is not enough solar.
           * Default:  15
       default: 15
@@ -93,7 +93,7 @@ blueprint:
         ***Create date/time helper with both date and time selected.***
         In preparation for tomorrow's charging session, the date/time trigger will be set by this automation just before the end of the current charging session.
         Once set, the helper will trigger the next run to meet charge completion time using secondary power source (grid/battery) and solar.
-        Requires "Set daily charge limit toggle" to be on and charge completion time to be set for the day.
+        Requires "Set daily charge limit" to be on and charge completion time to be set for the day.
         (Trigger entities must be created whether they are used or not.)
       selector:
         entity:
@@ -235,7 +235,7 @@ blueprint:
             - sensor
 
     toggle_secondary_power_source:
-      name: Secondary power source toggle for night time charging
+      name: Secondary power source for night time charging
       description: >
         Create toggle helper.
         Toggle on to manually control charge from secondary power source (grid/battery) at night using power offset or minimum current.
@@ -247,10 +247,10 @@ blueprint:
           domain: input_boolean
 
     toggle_stop_charger:
-      name: Stop charger toggle
+      name: Stop charger
       description: >
         Create toggle helper.
-        Toggle on to stop charger script.
+        Toggle on to stop this automation.
         Delayed by "Wait main power net update" value.
           * The default is off if not defined.
       default: boolean.user_custom
@@ -262,7 +262,7 @@ blueprint:
     # Daily charge limit
     #####################################
     toggle_set_daily_charge_limit:
-      name: Set daily charge limit toggle
+      name: Set daily charge limit
       description: >
         Create toggle helper.
         Toggle on to set charge limit configured for the day once on start up.
