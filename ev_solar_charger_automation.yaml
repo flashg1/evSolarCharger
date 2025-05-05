@@ -74,7 +74,11 @@ blueprint:
 
     charger_max_current:
       name: Charger maximum current
-      description: Specify charger maximum current in Ampere.
+      description: >
+        Specify charger maximum current in Ampere.
+        If setting daily charge limit is on and charge completion time is set,
+        the maximum charge current might be used to meet charge completion time.
+          * Default:  15
       default: 15
       selector:
         number:
