@@ -235,7 +235,7 @@ blueprint:
       description: >
         Create toggle helper.
         Toggle on to manually control charge from secondary power source (grid/battery) at night using power offset or minimum current.
-        Toggle off to charge car during daytime only, or to set daily charge limit completion time to automatically control charging.
+        Toggle off to charge car during daytime only, or to set daily charge limit completion time to automatically control charge schedule.
           * The default is off if not defined.
       default: boolean.user_custom
       selector:
