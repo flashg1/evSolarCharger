@@ -234,8 +234,8 @@ blueprint:
       name: Secondary power source toggle for night time charging
       description: >
         Create toggle helper.
-        Toggle on to charge from secondary power source (grid/battery) at night using power offset or minimum current.
-        Toggle off to charge car during daytime only.
+        Toggle on to manually control charge from secondary power source (grid/battery) at night using power offset or minimum current.
+        Toggle off to charge car during daytime only, or to set daily charge limit completion time to automatically control charging.
           * The default is off if not defined.
       default: boolean.user_custom
       selector:
@@ -262,11 +262,11 @@ blueprint:
       description: >
         Create toggle helper.
         Toggle on to set charge limit configured for the day once on start up.
-        The automation will charge more today if today has no charge completion time and next 3 days have much higher charge limit.
+        The automation will charge more today if today has no charge completion time and next 3 days have higher charge limit.
         If toggled off, the existing car charge limit will be used.
 
 
-        Note: Requires battery level sensor for this to work. Please toggle off this option if battery level sensor is not available.
+        Note: Requires battery level sensor for this to work. Please toggle off this option if battery level sensor is not supported.
           * The default is off if not defined.
       default: boolean.user_custom
       selector:
@@ -1542,13 +1542,13 @@ actions:
                     {{ (is_state_attr('sun.sun', 'rising', true) and state_attr('sun.sun', 'elevation') >= sunriseElevationStartTrigger)
                     or (is_state_attr('sun.sun', 'rising', false) and state_attr('sun.sun', 'elevation') > sunsetElevationEndTrigger) }}
 
+                - alias: "Continue if using secondary power source for night time charging"
+                  condition: template
+                  value_template: "{{ has_value(e_useSecondaryPowerSource) and is_state(e_useSecondaryPowerSource, 'on') }}"
+
                 - alias: "Continue if automation is running before charge end time"
                   condition: template
                   value_template: "{{ hasChargeEndTime and (chargeEndTime | as_datetime > now()) }}"
-
-                - alias: "Continue if using secondary power source"
-                  condition: template
-                  value_template: "{{ has_value(e_useSecondaryPowerSource) and is_state(e_useSecondaryPowerSource, 'on') }}"
 
       sequence:
         #####################################
