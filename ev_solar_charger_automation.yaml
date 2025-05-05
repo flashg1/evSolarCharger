@@ -77,7 +77,7 @@ blueprint:
       description: >
         Specify charger maximum current in Ampere.
         If setting daily charge limit is on and charge completion time is set,
-        the maximum charge current might be used to meet charge completion time.
+        the maximum charge current will be used to meet charge completion time if there is not enough solar.
           * Default:  15
       default: 15
       selector:
