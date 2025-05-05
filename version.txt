@@ -2,7 +2,7 @@ EV Solar Charger
 ================
 
 v3.0beta36  4/5/2025
--   The day before maximum charge limit day will use minChargeLimitDifference to minimise charge limit difference for the next day.
+-   The day before maximum charge limit day will be set 5% below the maximum to reduce charge limit difference for the next day.
 -   Tidied code and updated doc.
 
 v3.0beta35  3/5/2025
