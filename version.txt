@@ -3,6 +3,8 @@ EV Solar Charger
 
 v3.0beta36  4/5/2025
 -   The day before maximum charge limit day will be set 5% below the maximum to reduce charge limit difference for the next day.
+-   Fixed issue with using incorrect charge limit to estimate tomorrow's charge start time.
+-   Added sanity check to check charger is connected in case automation is started manually.
 -   Tidied code and updated doc.
 
 v3.0beta35  3/5/2025

@@ -1312,9 +1312,13 @@ actions:
   # Do not manually run this script if car is not at home, because it affects car charging anywhere.
   - if:
       - condition: template
-        value_template: "{{ has_value(e_evHomeState) and not states(e_evHomeState) in rc_evAtHomeStateList }}"
+        value_template: >
+          {{
+            (has_value(e_evHomeState) and not states(e_evHomeState) in rc_evAtHomeStateList)
+            or (not states(e_chargerConnectState) in rc_chargerConnectedStateList)
+          }}
     then:
-      - stop: "Exiting script because car is not at home, otherwise the script will affect car if charging elsewhere."
+      - stop: "Aborting automation because car is not at home or charger not connected."
 
   #####################################
   # Set car charge limit on start up
@@ -1917,12 +1921,13 @@ actions:
         {% endif %}
       # Calculate tomorrow charge end time
       # state_attr('sun.sun', 'next_rising').isoformat() is ISO 8601 formatted and has T between date and time, ie. can only compare with another ISO formatted string.
+      tomorrowChargeLimit: "{{ chargeLimitList[tomorrowIdx][k_chargeLimit] }}"
       tomorrowChargeEndTime: "{{ today_at('00:00:00') + timedelta(hours = 24) + as_timedelta(chargeLimitList[tomorrowIdx][k_chargeCompletionTime]) }}"
       tomorrowChargeStartTime: "{{ today_at(state_attr('sun.sun', 'next_rising') | as_timestamp | timestamp_custom('%H:%M:%S')) + timedelta(days = 1, seconds = (centreOfSunDegreeBelowHorizonAtSunrise + sunriseElevationStartTrigger) * secondsPerDegreeSunrise) }}"
       tomorrowAvailableChargeDuration: "{{ tomorrowChargeEndTime | as_timestamp - tomorrowChargeStartTime | as_timestamp }}"
       tomorrowNeedChargeDuration: >
-        {% if has_value(e_batteryLevel) and has_value(e_chargeLimit) %}
-          {{ (states(e_chargeLimit) | float - states(e_batteryLevel) | float) * onePercentChargeDuration }}
+        {% if has_value(e_batteryLevel) %}
+          {{ (tomorrowChargeLimit - states(e_batteryLevel) | float) * onePercentChargeDuration }}
         {% else %}
           {{ 100 * onePercentChargeDuration }}
         {% endif %}
