@@ -1599,11 +1599,11 @@ actions:
                 {{ batteryChargeCurrent }}
               {% endif %}
 
-            # Maximise minimum charge current if charge end time is set and it is night time or there is not enough time to charge.
+            # Maximise minimum charge current if charge end time is set and it is night time or there is not enough time to charge, but only before charge end time.
             # chargerMinCurrent might bounce between 0 and chargerMaxCurrent due to battery level not up-to-date or decimal inaccuracy,
             # so stablise it to chargerMaxCurrent if current is already at chargerMaxCurrent and needChargeDuration is only slightly less than availableChargeDuration.
             chargerMinCurrent: >
-              {% if hasChargeEndTime and
+              {% if hasChargeEndTime and availableChargeDuration > 0 and
                 (
                   not isDaylightHour
                   or needChargeDuration >= availableChargeDuration
@@ -1925,9 +1925,10 @@ actions:
       tomorrowChargeEndTime: "{{ today_at('00:00:00') + timedelta(hours = 24) + as_timedelta(chargeLimitList[tomorrowIdx][k_chargeCompletionTime]) }}"
       tomorrowChargeStartTime: "{{ today_at(state_attr('sun.sun', 'next_rising') | as_timestamp | timestamp_custom('%H:%M:%S')) + timedelta(days = 1, seconds = (centreOfSunDegreeBelowHorizonAtSunrise + sunriseElevationStartTrigger) * secondsPerDegreeSunrise) }}"
       tomorrowAvailableChargeDuration: "{{ tomorrowChargeEndTime | as_timestamp - tomorrowChargeStartTime | as_timestamp }}"
+      # Sometimes charge can decrease by 1% during charging at the beginning, so add extra onePercentChargeDuration for good measure.
       tomorrowNeedChargeDuration: >
         {% if has_value(e_batteryLevel) %}
-          {{ (tomorrowChargeLimit - states(e_batteryLevel) | float) * onePercentChargeDuration }}
+          {{ (tomorrowChargeLimit - states(e_batteryLevel) | float) * onePercentChargeDuration + onePercentChargeDuration }}
         {% else %}
           {{ 100 * onePercentChargeDuration }}
         {% endif %}
