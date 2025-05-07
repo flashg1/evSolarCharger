@@ -21,7 +21,7 @@ Features
 -   Compatible with off-peak night time charging.
 -   Configurable 7 days charge limit schedule.  Default is to use existing charge limit already set in car.
 -   Support just-in-time schedule charging to required charge limit using solar and grid if charge end time is set for the day.
--   Automatically charge more today if today has no charge end time and next 3 days have much higher charge limit.
+-   Automatically charge more today if today has no charge end time and next 3 days have higher charge limit.
 -   Automatically adjust to the highest charge limit set within a rainy forecast period.  The highest charge limit is selected from the 7 days charge limit settings that are within the forecast period taking into account the charge limit on bad weather setting.  The objective is to charge more before a rainy period.  Default disabled.
 -   Might be possible to prolong car battery life by setting daily charge limit to 60%, and only charge more before a rainy period by enabling option to adjust daily car charge limit based on weather.
 -   Allow manual top up from secondary power source (eg. grid, battery) if there is not enough solar during the day, or if required to charge during the night. Just need to set the power offset to specify the maximum power to draw from secondary power source. Also need to toggle on secondary power source if required to charge during the night.
