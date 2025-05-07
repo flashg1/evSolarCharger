@@ -1,6 +1,9 @@
 EV Solar Charger
 ================
 
+v3.0beta37  7/5/2025
+-   Removed checking conditions on trigger because car states might not be up-to-date. Only check conditions after force update.
+
 v3.0beta36  4/5/2025
 -   The day before maximum charge limit day will be set 5% below the maximum to reduce charge limit difference for the next day.
 -   Fixed issue with using incorrect charge limit to estimate tomorrow's charge start time.

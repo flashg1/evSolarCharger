@@ -32,7 +32,7 @@ blueprint:
     Helpers can be created on form or at Settings > Devices & Services > Helpers > Create helper.
 
 
-    **Version**: v3.0beta36
+    **Version**: v3.0beta37
 
 
     Your support is much appreciated if you find this project useful.
@@ -1014,19 +1014,20 @@ triggers:
   - trigger: time
     at: !input next_charge_time_trigger
 
-conditions:
-  # Car must be at location. OCPP charger will know when it is plugged in at location.
-  - condition: template
-    value_template: >
-      {% if has_value(chargeApi[k_ev_home_state]) %}
-        {{ states(chargeApi[k_ev_home_state]) in chargeApi[k_ev_at_home_state_list] }}
-      {% else %}
-        {{ true }}
-      {% endif %}
+# Do not check conditions on trigger because car states might not be up-to-date. Only check conditions after force update.
+# conditions:
+#   # Car must be at location. OCPP charger will know when it is plugged in at location.
+#   - condition: template
+#     value_template: >
+#       {% if has_value(chargeApi[k_ev_home_state]) %}
+#         {{ states(chargeApi[k_ev_home_state]) in chargeApi[k_ev_at_home_state_list] }}
+#       {% else %}
+#         {{ true }}
+#       {% endif %}
 
-  # Charger must be plugged in.
-  - condition: template
-    value_template: "{{ states(chargeApi[k_charger_connect_state]) in chargeApi[k_charger_connected_state_list] }}"
+#   # Charger must be plugged in.
+#   - condition: template
+#     value_template: "{{ states(chargeApi[k_charger_connect_state]) in chargeApi[k_charger_connected_state_list] }}"
 
 ###############################################################################
 # Global constants and site specific variables
@@ -1308,8 +1309,8 @@ actions:
       # No need to move status wait out of if statement because this is API specific.
       - delay: "{{ waitApiUpdateHa }}"
 
-  # Sanity check in case of manual run.
-  # Do not manually run this script if car is not at home, because it affects car charging anywhere.
+  # Check conditions to ensure car is at home and charger connected.
+  # Car can register charger connection but charging elsewhere, so make sure car is at home!
   - if:
       - condition: template
         value_template: >
