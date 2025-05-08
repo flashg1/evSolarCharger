@@ -52,7 +52,7 @@ My setup
 Installation
 ============
 
--	Set up "Main Power Net" sensor in Home Assistant (HA) config.  For example, for Enphase, sensor main_power_net expresses negative value in Watts for available power for charging car or positive value for consumed power.  For other inverter brands, adjust the formula to conform with above requirement according to your setup.
+-	Set up "Main Power Net" sensor in Home Assistant (HA) config.  For example, for Enphase, sensor main_power_net expresses negative value in Watts for available power for charging or positive value for consumed power.  For other inverter brands, adjust the formula to conform with above requirement according to your setup.
 ```
 Settings > Devices & services > Helpers > Create helper > Template > Template a sensor >
 
@@ -85,7 +85,7 @@ Settings > Devices & Services > Helpers > Create Helper >
 1.	Toggle: MyEV set daily charge limit
 1.	Toggle: MyEV adjust charge limit based on weather
 1.	Number: MyEV charge limit Monday .. Sunday
-1.	Time: MyEV charge end time Monday .. Sunday
+1.	Time: MyEV charge completion time Monday .. Sunday
 1.  Number: MyEV publish charge limit (only required if setting charge limit is not supported by car specific API)
 1.	Toggle: MyEV stop charging
 
