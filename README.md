@@ -89,7 +89,7 @@ Settings > Devices & Services > Helpers > Create Helper >
 1.  Number: MyEV publish charge limit (only required if setting charge limit is not supported by car specific API)
 1.	Toggle: MyEV stop charging
 
--	Config the Blueprint automation specifying the power feedback loop sensor, charger effective voltage, maximum current, charge control API selection and the optional helper entities created above, ie.
+-	Config the Blueprint automation specifying the power feedback loop sensor, charger effective voltage, maximum current, next charge time trigger, max charge speed, charge control API selection and the optional helper entities created above, ie.
 Settings > Automations & Scenes > Blueprints > EV solar charger automation
 
 
