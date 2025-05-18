@@ -1,6 +1,9 @@
 EV Solar Charger
 ================
 
+v3.0beta38  18/5/2025
+-   Breaking change: Changed battery charge speed from hour/percent to percent/hour. Please inverse your entry in Blueprint. Apologies.
+
 v3.0beta37  7/5/2025
 -   Removed checking conditions on trigger because car states might not be up-to-date. Only check conditions after force update.
 

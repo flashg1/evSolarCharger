@@ -32,7 +32,7 @@ blueprint:
     Helpers can be created on form or at Settings > Devices & Services > Helpers > Create helper.
 
 
-    **Version**: v3.0beta37
+    **Version**: v3.0beta38
 
 
     Your support is much appreciated if you find this project useful.
@@ -103,11 +103,11 @@ blueprint:
     battery_max_charge_speed:
       name: Battery maximum charge speed
       description: >
-        Create number or template helper to specify the battery **maximum** charge speed in hour per percentage rise in battery charge level.
+        Create number or template helper to specify the battery **maximum** charge speed in percentage rise in battery charge level per hour.
         The battery charge speed is used in schedule charging to estimate the time required to charge the battery to the specified percentage.
         Determine your own battery specific charge speed when using maximum charge current
         (see [example](https://github.com/flashg1/evSolarCharger/wiki/Configuration#how-to-determine-battery-maximum-charge-speed)).
-          * The default is 0.1631 hour/percent for 15A max charge current if not defined.
+          * The default is 6.1448 percent/hour for 15A max charge current if not defined.
       default: number.user_custom
       selector:
         entity:
@@ -1129,10 +1129,11 @@ variables:
   #####################################
   i_setDailyChargeLimit: !input toggle_set_daily_charge_limit
   setDailyChargeLimit: "{% if has_value(i_setDailyChargeLimit) %}{{ states(i_setDailyChargeLimit) }}{% else %}{{ 'off' }}{% endif %}"
-  # Used to estimate charge completion time. For Tesla M3, charge rate for 15A = 23.7km/hr, 409.625km=100%=17.28hr, 1%=0.1728hr
+  # Used to estimate charge completion time. For Tesla M3, charge rate for 15A = 23.7km/hr, 409.625km=100%=17.28hr, 1%=0.1728hr, 5.7870%/hr
   i_batteryMaxChargeSpeed: !input battery_max_charge_speed
-  batteryMaxChargeSpeed: "{% if has_value(i_batteryMaxChargeSpeed) %}{{ states(i_batteryMaxChargeSpeed) | float }}{% else %}{{ 0.1631 }}{% endif %}"
-  onePercentChargeDuration: "{{ batteryMaxChargeSpeed * 60 * 60 }}"
+  batteryMaxChargeSpeed: "{% if has_value(i_batteryMaxChargeSpeed) %}{{ states(i_batteryMaxChargeSpeed) | float }}{% else %}{{ 6.1448 }}{% endif %}"
+  # Duration in seconds to increase battery level by 1%
+  onePercentChargeDuration: "{{ 60 * 60 / batteryMaxChargeSpeed }}"
 
   i_chargeLimitMon: !input charge_limit_monday
   i_chargeLimitTue: !input charge_limit_tuesday
