@@ -103,7 +103,7 @@ blueprint:
     battery_max_charge_speed:
       name: Battery maximum charge speed
       description: >
-        Create number or template helper to specify the battery **maximum** charge speed in percentage rise in battery charge level per hour.
+        Create number or template helper to specify the battery **maximum** charge speed in charge level percentage rise per hour.
         The battery charge speed is used in schedule charging to estimate the time required to charge the battery to the specified percentage.
         Determine your own battery specific charge speed when using maximum charge current
         (see [example](https://github.com/flashg1/evSolarCharger/wiki/Configuration#how-to-determine-battery-maximum-charge-speed)).
