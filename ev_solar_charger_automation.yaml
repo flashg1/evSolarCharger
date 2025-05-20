@@ -1183,7 +1183,7 @@ variables:
   # List of charge limit configs
   chargeLimitList: "{{ [chargeLimitMon, chargeLimitTue, chargeLimitWed, chargeLimitThu, chargeLimitFri, chargeLimitSat, chargeLimitSun] }}"
   triggerEntityId: "{{ trigger.entity_id }}"
-  isSelfTriggered: "{{ triggerEntityId == e_nextChargeTimeTrigger }}"
+  isTriggeredByTimer: "{{ triggerEntityId == e_nextChargeTimeTrigger }}"
 
   #####################################
   # Set car charge limit based on weather forecast
@@ -1228,14 +1228,14 @@ actions:
       e_evWakeUp: "{{ chargeApi[k_ev_wake_up] }}"
       e_evForceUpdateHa: "{{ chargeApi[k_ev_status_update] }}"
 
-      # Self-triggered automation usually need to run at night to meet charge limit at charge end time.
-      # Self-triggered automation will try to reach charge limit at charge end time using solar and/or grid.
+      # Timer-triggered automation usually need to run at night to meet charge limit at charge end time.
+      # Timer-triggered automation will try to reach charge limit at charge end time using solar and/or grid.
       # For charge limit with charge end time, today = 00:00 to sunset, tomorrow = sunset to 00:00.
       # For charge limit without charge end time, today = 00:00 to 23:59.  Reaching charge limit is best effort only and depends on solar.
       sunsetTime: "{{ state_attr('sun.sun', 'next_setting') | as_timestamp | timestamp_custom('%H:%M:%S') }}"
       todaySunset: "{{ today_at(sunsetTime) }}"
       isToday: >
-        {% if isSelfTriggered %}
+        {% if isTriggeredByTimer %}
           {{ now() < (todaySunset | as_datetime) }}
         {% else %}
           {{ true }}
@@ -1266,7 +1266,7 @@ actions:
       debug_blueprintConfig: |
         myName = {{ this.entity_id }}
         triggerEntityId = {{ triggerEntityId }}
-        isSelfTriggered = {{ isSelfTriggered }}
+        isTriggeredByTimer = {{ isTriggeredByTimer }}
         batteryMaxChargeSpeed = {{ batteryMaxChargeSpeed }}
         onePercentChargeDuration = {{ onePercentChargeDuration }}
         chargerMinWorkableCurrent = {{ chargerMinWorkableCurrent }}
