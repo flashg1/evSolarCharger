@@ -119,7 +119,7 @@ blueprint:
     charger_min_current:
       name: Charger minimum current
       description: >
-        Create number or template helper to specify the minimum charge current.
+        Create number or template helper to specify the minimum charge current. Note: Setting to 0A might drain the car's 12V battery.
           * The default is 1A if not defined.
       default: number.user_custom
       selector:
