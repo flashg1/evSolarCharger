@@ -1,5 +1,5 @@
 # EV Solar Charger
-Home Assistant Blueprint using OCPP and/or EV specific API to charge EV from excess solar and weather forecast.
+Home Assistant Blueprint using OCPP and/or EV specific API to charge EV from surplus solar and weather forecast.
 
 ###############################################################################
 # Disclaimer:
@@ -78,7 +78,6 @@ Settings > Devices & Services > Helpers > Create Helper >
 1.  Number or template sensor: MyEV battery maximum charge speed
 
 -	Optionally create following helpers, or create them later for finer control, eg.
-Settings > Devices & Services > Helpers > Create Helper >
 1.  Number or template sensor: MyEV charger minimum current
 1.	Number or template sensor: MyEV power offset
 1.	Toggle: MyEV secondary power source (for night time charging)

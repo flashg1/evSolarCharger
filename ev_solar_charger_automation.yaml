@@ -6,7 +6,7 @@
 #
 ###############################################################################
 # Objective:
-# - Use OCPP and/or EV specific API to charge EV from excess solar and weather forecast.
+# - Use OCPP and/or EV specific API to charge EV from surplus solar and weather forecast.
 #
 # History:
 # 20/6/2023 Inspiration from Alphaemef's Tesla Solar Charger Blueprint 30/4/2023.
@@ -16,8 +16,8 @@ blueprint:
 
   name: EV solar charger automation
   description: >
-    Use OCPP and/or EV specific API to charge EV from excess solar and weather forecast.
-    See [github project page](https://github.com/flashg1/evSolarCharger) for details.
+    Use OCPP and/or EV specific API to charge EV from surplus solar and weather forecast.
+    See [GitHub project page](https://github.com/flashg1/evSolarCharger) for details.
 
 
     The following configs are required as a minimum for a functional Blueprint:
@@ -32,7 +32,7 @@ blueprint:
     Helpers can be created on form or at Settings > Devices & Services > Helpers > Create helper.
 
 
-    **Version**: v3.0beta38
+    **Version**: v3.0beta39
 
 
     Your support is much appreciated if you find this project useful.
@@ -119,8 +119,8 @@ blueprint:
     charger_min_current:
       name: Charger minimum current
       description: >
-        Create number or template helper to specify the minimum charge current at all times.
-          * The default is 0A if not defined.
+        Create number or template helper to specify the minimum charge current.
+          * The default is 1A if not defined.
       default: number.user_custom
       selector:
         entity:
@@ -1067,6 +1067,9 @@ variables:
   charge_limit_default: 60
   charge_completion_time_default: '00:00:00'
 
+  # Changed default minimum charge current from 0A to 1A to avoid draining 12V battery.
+  chargerMinCurrentDefault: 1
+
   # Sunrise is defined as the instant when the upper limb of the sun's disk is just touching the horizon, which corresponds to a solar altitude of -0.833 degrees.
   # For Sydney on 28/4/2025, sunrise at 6:28am, 6 degree elevation at 07:01:43am, (07:01:43 - 6:28:00) / (0.833 + 6) = 296.063 seconds/degree
   secondsPerDegreeSunrise: 296.063
@@ -1623,7 +1626,7 @@ actions:
                   {{ minCurrent }}
                 {% endif %}
               {% else %}
-                {{ 0 }}
+                {{ chargerMinCurrentDefault }}
               {% endif %}
 
             # -ve to use from secondary power source, +ve to export to secondary power source.

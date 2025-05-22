@@ -1,6 +1,10 @@
 EV Solar Charger
 ================
 
+v3.0beta39  21/5/2025
+-   Breaking change: Changed default minimum charge current from 0A to 1A to avoid draining 12V battery.
+-   Updated doc.
+
 v3.0beta38  18/5/2025
 -   Breaking change: Changed battery charge speed from hour/percent to percent/hour. Please inverse your entry in Blueprint. Apologies.
 
