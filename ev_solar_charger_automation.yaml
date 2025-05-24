@@ -1591,6 +1591,7 @@ actions:
                 {{ 0 }}
               {% endif %}
             availableChargeDuration: "{{ chargeEndTime | as_timestamp - nowTime | as_timestamp }}"
+            # Charge limit increase is not inclusive, ie. not (endPercent - startPercent + 1)
             needChargeDuration: "{{ (batteryChargeLimit - batteryChargeLevel) * onePercentChargeDuration }}"
 
             isDaylightHour: >
