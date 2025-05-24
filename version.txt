@@ -1,6 +1,9 @@
 EV Solar Charger
 ================
 
+v3.0beta40  24/5/2025
+-   Do not change daily charge limit if charge end time is set and still in the future.
+
 v3.0beta39  21/5/2025
 -   Breaking change: Changed default minimum charge current from 0A to 1A to avoid draining 12V battery.
 -   Updated doc.

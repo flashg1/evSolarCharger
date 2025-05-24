@@ -32,7 +32,7 @@ blueprint:
     Helpers can be created on form or at Settings > Devices & Services > Helpers > Create helper.
 
 
-    **Version**: v3.0beta39
+    **Version**: v3.0beta40
 
 
     Your support is much appreciated if you find this project useful.
@@ -1070,6 +1070,9 @@ variables:
   # Changed default minimum charge current from 0A to 1A to avoid draining 12V battery.
   chargerMinCurrentDefault: 1
 
+  # Battery max charge speed default is 6.1448 percent/hr using max current 15A.
+  batteryMaxChargeSpeedDefault: 6.1448
+
   # Sunrise is defined as the instant when the upper limb of the sun's disk is just touching the horizon, which corresponds to a solar altitude of -0.833 degrees.
   # For Sydney on 28/4/2025, sunrise at 6:28am, 6 degree elevation at 07:01:43am, (07:01:43 - 6:28:00) / (0.833 + 6) = 296.063 seconds/degree
   secondsPerDegreeSunrise: 296.063
@@ -1134,7 +1137,7 @@ variables:
   setDailyChargeLimit: "{% if has_value(i_setDailyChargeLimit) %}{{ states(i_setDailyChargeLimit) }}{% else %}{{ 'off' }}{% endif %}"
   # Used to estimate charge completion time. For Tesla M3, charge rate for 15A = 23.7km/hr, 409.625km=100%=17.28hr, 1%=0.1728hr, 5.7870%/hr
   i_batteryMaxChargeSpeed: !input battery_max_charge_speed
-  batteryMaxChargeSpeed: "{% if has_value(i_batteryMaxChargeSpeed) %}{{ states(i_batteryMaxChargeSpeed) | float }}{% else %}{{ 6.1448 }}{% endif %}"
+  batteryMaxChargeSpeed: "{% if has_value(i_batteryMaxChargeSpeed) %}{{ states(i_batteryMaxChargeSpeed) | float }}{% else %}{{ batteryMaxChargeSpeedDefault }}{% endif %}"
   # Duration in seconds to increase battery level by 1%
   onePercentChargeDuration: "{{ 60 * 60 / batteryMaxChargeSpeed }}"
 
@@ -1266,6 +1269,8 @@ actions:
           {{ false }}
         {% endif %}
 
+      isBeforeChargeEndTime: "{{ hasChargeEndTime and now() < (chargeEndTime | as_datetime) }}"
+
       debug_blueprintConfig: |
         myName = {{ this.entity_id }}
         triggerEntityId = {{ triggerEntityId }}
@@ -1287,6 +1292,7 @@ actions:
         chargeLimitConfig = {{ chargeLimitConfig }}
         chargeEndTime = {{ chargeEndTime }}
         hasChargeEndTime = {{ hasChargeEndTime }}
+        isBeforeChargeEndTime = {{ isBeforeChargeEndTime }}
 
   #####################################
   # Init car
@@ -1395,7 +1401,7 @@ actions:
               and badWeatherPeriodMaxChargeLimit > todayChargeLimit %}
                 {{ badWeatherPeriodMaxChargeLimit }}
               {% else %}
-                {{ todayChargeLimit }} 
+                {{ todayChargeLimit }}
               {% endif %}
 
             # Look ahead charge limit list including today.
@@ -1422,7 +1428,9 @@ actions:
 
             # Automatically charge more today if today has no charge end time and next 3 days have much higher charge limit.
             finalChargeLimit: >
-              {% if not hasChargeEndTime and lookAheadChargeLimit > proposeChargeLimit %}
+              {% if hasChargeEndTime and isBeforeChargeEndTime %}
+                {{ todayChargeLimit }}
+              {% elif lookAheadChargeLimit > proposeChargeLimit %}
                 {{ lookAheadChargeLimit }}
               {% else %}
                 {{ proposeChargeLimit }} 
