@@ -32,7 +32,7 @@ blueprint:
     Helpers can be created on form or at Settings > Devices & Services > Helpers > Create helper.
 
 
-    **Version**: v3.0beta40
+    **Version**: v3.0beta41
 
 
     Your support is much appreciated if you find this project useful.
@@ -510,6 +510,7 @@ blueprint:
         Select
         [Tesla Custom API](https://github.com/alandtse/tesla),
         or [Tesla Fleet API](https://www.home-assistant.io/integrations/tesla_fleet) (not tested),
+        or [Tessie API](https://www.home-assistant.io/integrations/tessie) (not tested),
         or [Tesla BLE (Bluetooth Low Energy) MQTT API](https://github.com/tesla-local-control/tesla_ble_mqtt_docker),
         or [OCPP (Open Charge Point Protocol) Charger API](https://github.com/lbbrhzn/ocpp) to control an OCPP compliant charger to charge a EV (tested with [OCPP simulator](https://github.com/lewei50/iammeter-simulator) only),
         or select user custom API to specify your own configs.
@@ -524,7 +525,7 @@ blueprint:
           options:
           - label: Tesla custom API
             value: "k_tesla_custom_api"
-          - label: Tesla Fleet API
+          - label: Tesla Fleet or Tessie API
             value: "k_tesla_fleet_api"
           - label: Tesla BLE MQTT API
             value: "k_tesla_blemqtt_api"

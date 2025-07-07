@@ -1,6 +1,9 @@
 EV Solar Charger
 ================
 
+v3.0beta41  7/7/2025
+-   Tesla Fleet API and Tessie API used the same entity names.
+
 v3.0beta40  24/5/2025
 -   Do not change daily charge limit if charge end time is set and still in the future.
 
