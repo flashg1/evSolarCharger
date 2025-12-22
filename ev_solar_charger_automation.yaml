@@ -32,7 +32,7 @@ blueprint:
     Helpers can be created on form or at Settings > Devices & Services > Helpers > Create helper.
 
 
-    **Version**: v3.0beta41
+    **Version**: v3.0
 
 
     Your support is much appreciated if you find this project useful.
@@ -1317,8 +1317,11 @@ actions:
         data: {}
         target:
           entity_id: "{{ e_evForceUpdateHa }}"
-      # No need to move status wait out of if statement because this is API specific.
-      - delay: "{{ waitApiUpdateHa }}"
+    else:
+      - action: homeassistant.update_entity
+        target:
+          entity_id: "{{ e_chargerConnectState }}, {{ e_chargerChargeState }}{% if has_value(e_batteryLevel) %}, {{ e_batteryLevel }}{% endif %}"
+  - delay: "{{ waitApiUpdateHa }}"
 
   # Check conditions to ensure car is at home and charger connected.
   # Car can register charger connection but charging elsewhere, so make sure car is at home!
@@ -1471,6 +1474,10 @@ actions:
               data: {}
               target:
                 entity_id: "{{ e_evForceUpdateHa }}"
+          else:
+            - action: homeassistant.update_entity
+              target:
+                entity_id: "{{ e_chargerConnectState }}, {{ e_chargerChargeState }}{% if has_value(e_batteryLevel) %}, {{ e_batteryLevel }}{% endif %}"
         # Moved status wait out of if statement to apply wait for all after charge limit change.
         # Tesla BLE need 25 seconds here.
         - delay: "{{ waitApiUpdateHa }}"
@@ -1770,6 +1777,10 @@ actions:
                     data: {}
                     target:
                       entity_id: "{{ e_evForceUpdateHa }}"
+                else:
+                  - action: homeassistant.update_entity
+                    target:
+                      entity_id: "{{ e_chargerConnectState }}, {{ e_chargerChargeState }}{% if has_value(e_batteryLevel) %}, {{ e_batteryLevel }}{% endif %}"
               - delay: "{{ waitApiUpdateHa }}"
 
           #####################################
@@ -1829,6 +1840,10 @@ actions:
               data: {}
               target:
                 entity_id: "{{ e_evForceUpdateHa }}"
+          else:
+            - action: homeassistant.update_entity
+              target:
+                entity_id: "{{ e_chargerConnectState }}, {{ e_chargerChargeState }}{% if has_value(e_batteryLevel) %}, {{ e_batteryLevel }}{% endif %}"
         # No need to wait here because already waiting in main loop.
         # - delay: "{{ waitApiUpdateHa }}"
 
@@ -1917,6 +1932,10 @@ actions:
         data: {}
         target:
           entity_id: "{{ e_evForceUpdateHa }}"
+    else:
+      - action: homeassistant.update_entity
+        target:
+          entity_id: "{{ e_chargerConnectState }}, {{ e_chargerChargeState }}{% if has_value(e_batteryLevel) %}, {{ e_batteryLevel }}{% endif %}"
   # Moved status wait out of if statement to apply wait for all just before exit.
   - delay: "{{ waitApiUpdateHa }}"
 

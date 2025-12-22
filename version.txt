@@ -1,6 +1,9 @@
 EV Solar Charger
 ================
 
+v3.0 22/12/2025
+-   Use homeassistant.update_entity for e_chargerConnectState, e_chargerChargeState and e_batteryLevel for APIs without update button.
+
 v3.0beta41  7/7/2025
 -   Tesla Fleet API and Tessie API used the same entity names.
 
