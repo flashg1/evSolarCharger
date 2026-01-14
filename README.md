@@ -1,20 +1,18 @@
+# Support for evSolarCharger is ending ...
+Please try [SolarCharger](https://github.com/flashg1/SolarCharger) instead.
+
 # EV Solar Charger
 Home Assistant Blueprint using OCPP and/or EV specific API to charge EV from surplus solar and weather forecast.
 
-###############################################################################
-# Disclaimer:
-#
-# Even though this automation has been created with care, the author cannot be responsible for any damage caused by this automation.  Use at your own risk.
-#
-###############################################################################
+## Disclaimer:
+Even though this automation has been created with care, the author cannot be responsible for any damage caused by this automation.  Use at your own risk.
 
 ![Screenshot_20230702-094232_Home Assistant](https://github.com/flashg1/TeslaSolarCharger/assets/122323972/58d1df89-905b-422c-8542-0081b9fa342f)
 
 ![Screenshot_20230630-135925_Home Assistant](https://github.com/flashg1/TeslaSolarCharger/assets/122323972/2f04b1e2-b56d-493c-977f-82d5dd04cbe5)
 
 
-Features
-========
+## Features
 
 -   Charge from excess solar adjusting car charging current according to feedback loop value "Main Power Net".  The "Main Power Net" sensor expresses negative value in Watts for available power for charging car, or positive value for consumed power.
 -   Support multi-day solar charging using sun elevation triggers to start and stop.
@@ -37,8 +35,7 @@ Features
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/flashg1)
 
 
-My setup
-========
+## My setup
 
 -	Home Assistant, https://www.home-assistant.io/
 -	Enphase Envoy Integration configured for 30 seconds update interval, https://www.home-assistant.io/integrations/enphase_envoy
@@ -49,8 +46,7 @@ My setup
 -	Tesla Model 3.
 
 
-Installation
-============
+## Installation
 
 -	Set up "Main Power Net" sensor in Home Assistant (HA) config.  For example, for Enphase, sensor main_power_net expresses negative value in Watts for available power for charging or positive value for consumed power.  For other inverter brands, adjust the formula to conform with above requirement according to your setup.
 ```
@@ -92,8 +88,7 @@ Settings > Devices & Services > Helpers > Create Helper >
 Settings > Automations & Scenes > Blueprints > EV solar charger automation
 
 
-How to use
-==========
+## How to use
 
 -	Set your car charge limit.
 -	Connect charger to car.  Normal charging at constant current should begin immediately if schedule charging is disabled.  After a little while, the script will take over and manage the charging current during daylight hours.  Please see [wiki](https://github.com/flashg1/evSolarCharger/wiki/User-guide#automation-cannot-be-triggered) if automation cannot be triggered.
@@ -103,12 +98,10 @@ How to use
 
 2 options on how to charge the car:
 
-Option 1
---------
+### Option 1
 To charge from excess solar, just plug in the charger.  The initial charge current is 6A.  After about 1 minute it will adjust the current according to amount of excess power exported to grid.
 
-Option 2
---------
+### Option 2
 To charge from secondary power source and solar, set minimum charge current or power offset to draw from secondary power source.  Also need to toggle on secondary power source if charging at night.
 
 Please also check out the [wiki](https://github.com/flashg1/evSolarCharger/wiki) pages.
