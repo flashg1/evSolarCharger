@@ -1,5 +1,5 @@
 # Support for evSolarCharger is ending ...
-Please try [SolarCharger](https://github.com/flashg1/SolarCharger) instead.
+Please use [SolarCharger](https://github.com/flashg1/SolarCharger) instead.  Please read [this](https://github.com/flashg1/SolarCharger/wiki/Installation#how-to-migrate-from-teslasolarchargerevsolarcharger-to-solarcharger) if you need to migrate from TeslaSolarCharger or evSolarCharger.
 
 # EV Solar Charger
 Home Assistant Blueprint using OCPP and/or EV specific API to charge EV from surplus solar and weather forecast.
